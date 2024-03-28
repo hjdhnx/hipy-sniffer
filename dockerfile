@@ -21,4 +21,4 @@ EXPOSE 5708
 ENTRYPOINT ["/etc/autostart/app.sh","run"]
 
 # docker build -f dockerfile -t hjdhnx/hipy-sniffer .  构建命令,非此文件内命令
-# docker run -d -it --name hipy-sniffer -p 5708:5708 -v /home/hipy-sniffer:/home/hipy-sniffer hjdhnx/hipy-sniffer
+# docker run -d -it --name hipy-sniffer -p 5708:5708 -v /home/hipy/hipy-sniffer:/home/hipy-sniffer hjdhnx/hipy-sniffer
