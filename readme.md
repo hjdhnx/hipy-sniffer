@@ -27,3 +27,8 @@ google-chrome --version
 ### 程序启动后操作
 
 访问你的ip+端口5708进入激活页面 [http://localhost:5708](http://localhost:5708)
+
+### docker一键安装(amd64架构亲测)
+```shell
+docker run -d -it --name hipy-sniffer -p 5708:5708 -v /home/hipy/hipy-sniffer:/home/hipy-sniffer hjdhnx/hipy-sniffer
+```
