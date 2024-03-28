@@ -93,7 +93,6 @@ async def sniffer():
         try:
             browser = browser_drivers[0]
             ret = await browser.snifferMediaUrl(url, mode=mode, timeout=timeout, custom_regex=custom_regex)
-            print(app.config.get('DEBUG'))
             if app.config.get('DEBUG'):
                 print(ret)
             return await respVodJson(data=ret)
