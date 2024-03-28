@@ -1,4 +1,6 @@
 {
-  "DEBUG": true,
+  "DEBUG": false,
+  "HOST": "0.0.0.0",
+  "PORT": "5708",
   "MAX_CONTENT_LENGTH": 33554432
 }

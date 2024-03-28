@@ -1,4 +1,7 @@
 ### hipy-server嗅探器使用说明
+##### 技术栈:  python|quart|playwright
+
+[套装传送门:hipy-server](https://github.com/hjdhnx/hipy-server/)  
 
 ### 安装
 ```shell

@@ -40,7 +40,6 @@ def JSONResponse(content: dict, status_code=200):
     media_type = "application/json; charset=UTF-8"
     headers = {"Content-type": media_type}
     data = json.dumps(content, ensure_ascii=False, indent=4, cls=DateEncoder)
-    print(data)
     return make_response((data, status_code, headers))
 
 

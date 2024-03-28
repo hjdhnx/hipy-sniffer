@@ -19,15 +19,18 @@ from threading import Lock
 from common.resp import HTMLResponse, PlainTextResponse, respSuccessJson, respErrorJson, respVodJson
 from common import error_code
 
+_logger = logging.getLogger(__name__)
+lock = Lock()
+
 app = Quart(__name__, static_folder='static')
 app.config['JSON_AS_ASCII'] = False  # 让jsonify()返回的json数据以utf8编码方式正常显示中文
-lock = Lock()
-_logger = logging.getLogger(__name__)
+app.config.from_file("quart_config.json", json.load)
+_logger.info('---quart_config.json加载完毕---')
 
 
 @app.route('/', methods=['GET'])
 async def _index():
-    resp = await render_template("index.html")  # Required to be in templates/
+    resp = await render_template("index.html", port=app.config.get('PORT'))  # Required to be in templates/
     return resp
 
 
@@ -48,7 +51,7 @@ async def active_sniffer():
     with lock:
         if not browser_drivers:
             try:
-                async with Sniffer(debug=False, headless=False) as browser:
+                async with Sniffer(debug=False, headless=True) as browser:
                     browser_drivers.append(browser)
                 return await respSuccessJson(data='嗅探器激活成功')
             except Exception as e:
@@ -90,13 +93,14 @@ async def sniffer():
         try:
             browser = browser_drivers[0]
             ret = await browser.snifferMediaUrl(url, mode=mode, timeout=timeout, custom_regex=custom_regex)
-            print(ret)
+            print(app.config.get('DEBUG'))
+            if app.config.get('DEBUG'):
+                print(ret)
             return await respVodJson(data=ret)
         except Exception as e:
             return respErrorJson(error_code.ERROR_INTERNAL(f'执行嗅探发生了错误:{e}'))
 
 
 if __name__ == '__main__':
-    app.config.from_file("quart_config.json", json.load)
-    _logger.info('---quart_config.json加载完毕---')
-    app.run(debug=False, host='0.0.0.0', port=5708)
+    app.run(debug=app.config.get('DEBUG') or False, host=app.config.get('HOST') or '0.0.0.0',
+            port=app.config.get('PORT'))
