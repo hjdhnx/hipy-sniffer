@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <!-- 在 head 标签中添加 meta 标签，并设置 viewport-fit=cover 值 -->
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover"
+    />
+    <link rel="shortcut icon" href="/static/images/logo.png" type="image/x-icon">
+    <title>hipy-sniffer嗅探器</title>
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/grey.js"></script>
+</head>
+<style>
+    #test_sniffer {
+        margin: 2px;
+        padding: 5px;
+    }
+</style>
+<body>
+<h2>hipy-sniffer|为hipy-server而生的高性能网页嗅探器</h2>
+<a id='active' href="/active">访问此处激活您的嗅探器程序</a>
+<div id="test_sniffer">
+
+</div>
+<script>
+    var urls = [
+        {title: '杰森解析', url: 'https://jx.jsonplayer.com/player/?url=https://m.iqiyi.com/v_1pj3ayb1n70.html'},
+        {title: '阳途解析', url: 'https://jx.yangtu.top/?url=https://m.iqiyi.com/v_1pj3ayb1n70.html'},
+        {title: '腾云驾雾', url: 'https://v.qq.com/x/page/i3038urj2mt.html'},
+        {title: '百忙无果', url: 'http://www.mgtv.com/v/1/290346/f/3664551.html'},
+    ];
+    $(document).ready(function () {
+        urls.forEach((item) => {
+            $('#test_sniffer').append(`<br/><a href="/sniffer?url=${item.url}">测试嗅探${item.title}</a>`)
+        });
+    });
+</script>
+</body>
+
+</html>
