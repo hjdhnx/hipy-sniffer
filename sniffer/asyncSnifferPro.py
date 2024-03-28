@@ -209,6 +209,7 @@ class Sniffer:
         @param url: 待获取源码的url
         @return:
         """
+        t1 = time()
         page = await self._get_page(headers)
         response = {'content': '', 'headers': {'location': url}}
         try:
@@ -219,7 +220,9 @@ class Sniffer:
             await page.wait_for_load_state('load')
             response['content'] = await page.content()
             response['headers']['location'] = page.url
-
+        t2 = time()
+        cost = round((t2 - t1) * 1000, 2)
+        response['cost'] = cost
         await self.close_page(page)
         return response
 

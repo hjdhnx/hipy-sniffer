@@ -100,6 +100,36 @@ async def sniffer():
             return respErrorJson(error_code.ERROR_INTERNAL(f'执行嗅探发生了错误:{e}'))
 
 
+@app.route("/fetCodeByWebView", methods=['GET'])
+async def fetCodeByWebView():
+    def getParams(_key=None, _value=''):
+        if _key:
+            return request.args.get(_key) or _value
+        else:
+            return request.args.__dict__['_dict']
+
+    try:
+        url = getParams('url')
+        headers = json.loads(getParams('headers')) if getParams('headers') else None
+    except Exception as e:
+        return await respErrorJson(error_code.ERROR_PARAMETER_ERROR.set_msg(f'参数校验错误:{e}'))
+
+    if not str(url).startswith('http'):
+        return await respErrorJson(error_code.ERROR_PARAMETER_ERROR.set_msg('传入的url不合法'))
+
+    if not browser_drivers:
+        return await respErrorJson(error_code.ERROR_INTERNAL.set_msg('嗅探器尚未激活,无法处理您的请求'))
+    else:
+        try:
+            browser = browser_drivers[0]
+            ret = await browser.fetCodeByWebView(url, headers)
+            if app.config.get('DEBUG'):
+                print(ret)
+            return await respVodJson(data=ret)
+        except Exception as e:
+            return respErrorJson(error_code.ERROR_INTERNAL(f'执行嗅探发生了错误:{e}'))
+
+
 if __name__ == '__main__':
     app.run(debug=app.config.get('DEBUG') or False, host=app.config.get('HOST') or '0.0.0.0',
             port=app.config.get('PORT'))
