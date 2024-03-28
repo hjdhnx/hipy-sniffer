@@ -13,5 +13,6 @@ case "$1" in
 esac
 sleep 2
 curl http://127.0.0.1:5708/active
+tail -f nohup.out
 # 保留一个 bash
 /bin/bash

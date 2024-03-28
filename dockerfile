@@ -23,3 +23,4 @@ ENTRYPOINT ["/etc/autostart/app.sh","run"]
 
 # docker build -f dockerfile -t hjdhnx/hipy-sniffer .  构建命令,非此文件内命令
 # docker run -d -it --name hipy-sniffer -p 5708:5708 -v /home/hipy/hipy-sniffer:/home/hipy-sniffer hjdhnx/hipy-sniffer
+# docker commit -a "hjdhnx" -m "edit app.sh" 27f  hjdhnx/hipy-sniffer
