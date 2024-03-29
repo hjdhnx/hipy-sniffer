@@ -37,6 +37,8 @@ class Sniffer:
     requests = None
     user_agent: str = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36'
     pages = []
+    web_timeout = 15000  # 获取页面源码不超过10秒
+    sniffer_timeout = 20000  # 嗅探网页不超20秒
 
     def __init__(self,
                  timeout=10000, head_timeout=200, user_agent=None,
@@ -203,14 +205,22 @@ class Sniffer:
         await self.browser.close()
         await self.playwright.stop()
 
-    async def fetCodeByWebView(self, url, headers=None):
+    async def fetCodeByWebView(self, url, headers=None, timeout=None):
         """
         利用webview请求得到渲染完成后的源码
         @param url: 待获取源码的url
         @return:
         """
         t1 = time()
+        if timeout is None:
+            timeout = self.timeout
+        else:
+            timeout = min([timeout, self.web_timeout])
         page = await self._get_page(headers)
+        # 设置全局导航超时
+        page.set_default_navigation_timeout(timeout)
+        # 设置全局等待超时
+        page.set_default_timeout(timeout)
         response = {'content': '', 'headers': {'location': url}}
         try:
             await page.goto(url)
@@ -235,15 +245,21 @@ class Sniffer:
         @param timeout: 超时
         @return:
         """
+        t1 = time()
         if custom_regex is None:
             custom_regex = self.custom_regex
 
         realUrls = []  # 真实链接列表，用于mode=1场景
         headUrls = []  # 已经head请求过的链接
-        t1 = time()
         page = await self._get_page()
         if timeout is None:
             timeout = self.timeout
+        else:
+            if mode == 1:  # 嗅探所有超时设定在10s内
+                timeout = min([timeout, self.timeout])
+            else:
+                # 其他单个自定义时间不得超过20s
+                timeout = min([timeout, self.sniffer_timeout])
 
         async def _on_request(request):
             nonlocal realUrls, headUrls
@@ -337,6 +353,9 @@ class Sniffer:
                         headUrls.append(url)
 
         page.on('request', _on_request)
+        # 设置全局导航超时
+        page.set_default_navigation_timeout(timeout)
+        # 设置全局等待超时
         page.set_default_timeout(timeout)
         await page.evaluate("""
         window.realUrl = ''
@@ -389,27 +408,28 @@ async def main_test():
     t1 = time()
     urls = [
         # 'https://www.cs1369.com/play/2-1-94.html',
+        # 'https://m.ting13.cc/play/19176_1_91258.html',
         'https://v.qq.com/x/page/i3038urj2mt.html',
         'http://www.mgtv.com/v/1/290346/f/3664551.html',
         'https://jx.jsonplayer.com/player/?url=https://m.iqiyi.com/v_1pj3ayb1n70.html',
         'https://jx.yangtu.top/?url=https://m.iqiyi.com/v_1pj3ayb1n70.html',
     ]
     _count = 0
-    async with Sniffer(debug=True) as browser:
+    async with Sniffer(debug=True, headless=True) as browser:
         # 在这里，async_func已被调用并已完成
         pass
     for url in urls:
         _count += 1
-        ret = await browser.snifferMediaUrl(url)
+        ret = await browser.snifferMediaUrl(url, timeout=15000)
         print(ret)
 
     _count += 1
     ret = await browser.snifferMediaUrl('https://jx.yangtu.top/?url=https://m.iqiyi.com/v_1pj3ayb1n70.html',
                                         custom_regex='http((?!http).){12,}?(download4|pcDownloadFile)')
     print(ret)
-    _count += 1
-    ret = await browser.fetCodeByWebView('https://www.freeok.pro/xplay/63170-8-12.html')
-    print(ret)
+    # _count += 1
+    # ret = await browser.fetCodeByWebView('https://www.freeok.pro/xplay/63170-8-12.html')
+    # print(ret)
 
     await browser.close()
     t2 = time()
@@ -441,6 +461,6 @@ async def demo_test_csdn():
 
 if __name__ == '__main__':
     # 运行事件循环
-    # asyncio.run(demo_test())
+    asyncio.run(demo_test())
     # asyncio.run(demo_test_csdn())
-    asyncio.run(main_test())
+    # asyncio.run(main_test())
