@@ -8,6 +8,18 @@
 pip3 install -r requirements.txt
 ```
 
+### quart_config.json配置说明
+```text
+{
+  "DEBUG": false, // 程度运行时是否输出嗅探的结果日志
+  "HOST": "0.0.0.0",//程序运行时允许的ip，这个一般不用改
+  "PORT": "5708",//程序运行端口
+  "SNIFFER_DEBUG": false,//嗅探器在嗅探过程中是否打印日志，线上环境建议别开，本地调试可以打开
+  "SNIFFER_HEADLESS": true,//嗅探的浏览器是否开启无头模式。调试的时候可以设为false看问题，上线一定设置为true
+  "MAX_CONTENT_LENGTH": 33554432 // 默认最大内容64mb
+}
+```
+
 ### 运行
 ```shell
 python3 main.py

@@ -51,9 +51,10 @@ async def active_sniffer():
     with lock:
         if not browser_drivers:
             try:
-                async with Sniffer(debug=False, headless=True) as browser:
+                async with Sniffer(debug=app.config.get('SNIFFER_DEBUG'),
+                                   headless=app.config.get('SNIFFER_HEADLESS')) as browser:
                     browser_drivers.append(browser)
-                return await respSuccessJson(data='嗅探器激活成功')
+                return await respSuccessJson(data=f'嗅探器激活成功,使用的浏览器为:{browser.channel}')
             except Exception as e:
                 return await respErrorJson(error_code.ERROR_INTERNAL.set_msg(f'嗅探器激活失败:{e}'))
         else:
@@ -132,4 +133,4 @@ async def fetCodeByWebView():
 
 if __name__ == '__main__':
     app.run(debug=app.config.get('DEBUG') or False, host=app.config.get('HOST') or '0.0.0.0',
-            port=app.config.get('PORT'))
+            port=app.config.get('PORT') or 5708)

@@ -42,7 +42,7 @@ class Sniffer:
 
     def __init__(self,
                  timeout=10000, head_timeout=200, user_agent=None,
-                 custom_regex=None, headless=True, debug=False):
+                 custom_regex=None, headless=True, debug=False, use_chrome=True):
         """
         初始化
         @param timeout: 全局嗅探超时
@@ -61,6 +61,7 @@ class Sniffer:
         self.debug = debug
         self.custom_regex = custom_regex
         self.headless = headless
+        self.channel = "chrome" if use_chrome else None
 
     def log(self, *args):
         """
@@ -88,8 +89,9 @@ class Sniffer:
         @return:
         """
         self.playwright = await async_playwright().start()
+
         # 用手动安装的chrome浏览器。不用它自带的三个垃圾浏览器
-        browser = await self.playwright.chromium.launch(channel="chrome", headless=self.headless)
+        browser = await self.playwright.chromium.launch(channel=self.channel, headless=self.headless)
         # 模拟使用苹果手机
         iphone = self.playwright.devices["iPhone 12 Pro"]
         context = await browser.new_context(**iphone)
