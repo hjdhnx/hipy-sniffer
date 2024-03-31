@@ -52,7 +52,9 @@ async def active_sniffer():
         if not browser_drivers:
             try:
                 async with Sniffer(debug=app.config.get('SNIFFER_DEBUG'),
-                                   headless=app.config.get('SNIFFER_HEADLESS')) as browser:
+                                   headless=app.config.get('SNIFFER_HEADLESS'),
+                                   use_chrome=app.config.get('USE_CHROME'),
+                                   ) as browser:
                     browser_drivers.append(browser)
                 return await respSuccessJson(data=f'嗅探器激活成功,使用的浏览器为:{browser.channel}')
             except Exception as e:

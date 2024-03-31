@@ -16,6 +16,7 @@ pip3 install -r requirements.txt
   "PORT": "5708",//程序运行端口
   "SNIFFER_DEBUG": false,//嗅探器在嗅探过程中是否打印日志，线上环境建议别开，本地调试可以打开
   "SNIFFER_HEADLESS": true,//嗅探的浏览器是否开启无头模式。调试的时候可以设为false看问题，上线一定设置为true
+  "USE_CHROME": true,//使用谷歌浏览器进行嗅探。手机arm架构不支持，请设置false。其他amd64设备设为true
   "MAX_CONTENT_LENGTH": 33554432 // 默认最大内容64mb
 }
 ```

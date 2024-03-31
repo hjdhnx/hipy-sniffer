@@ -4,5 +4,6 @@
   "PORT": "5708",
   "SNIFFER_DEBUG": false,
   "SNIFFER_HEADLESS": true,
+  "USE_CHROME": true,
   "MAX_CONTENT_LENGTH": 33554432
 }
