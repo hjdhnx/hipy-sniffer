@@ -39,10 +39,11 @@ class Sniffer:
     pages = []
     web_timeout = 15000  # 获取页面源码不超过10秒
     sniffer_timeout = 20000  # 嗅探网页不超20秒
+    wait_timeout = 3000  # 等待时间不超过3秒
 
     def __init__(self,
                  timeout=10000, head_timeout=200, user_agent=None,
-                 custom_regex=None, headless=True, debug=False, use_chrome=True):
+                 custom_regex=None, headless=True, debug=False, use_chrome=True, is_pc=False):
         """
         初始化
         @param timeout: 全局嗅探超时
@@ -62,6 +63,7 @@ class Sniffer:
         self.custom_regex = custom_regex
         self.headless = headless
         self.channel = "chrome" if use_chrome else None
+        self.is_pc = is_pc
 
     def log(self, *args):
         """
@@ -92,14 +94,19 @@ class Sniffer:
 
         # 用手动安装的chrome浏览器。不用它自带的三个垃圾浏览器
         browser = await self.playwright.chromium.launch(channel=self.channel, headless=self.headless)
-        # 模拟使用苹果手机
-        iphone = self.playwright.devices["iPhone 12 Pro"]
-        context = await browser.new_context(**iphone)
+        # print(self.playwright.devices)
+        if not self.is_pc:
+            # 模拟使用苹果手机
+            iphone = self.playwright.devices["iPhone 14 Pro"]
+            context = await browser.new_context(**iphone)
+        else:
+            context = await browser.new_context()
         # 开启一个主窗口方便后续的page新开和关闭不会退出程序
         self.main_page = await context.new_page()
         # 上下文自带的request库，跟requests库有点类似，但是用法也有差别
         self.requests = context.request
-        return browser
+        # return browser
+        return context
 
     async def setCookie(self, page, cookie=''):
         """
@@ -238,7 +245,7 @@ class Sniffer:
         await self.close_page(page)
         return response
 
-    async def snifferMediaUrl(self, playUrl, mode=0, custom_regex=None, timeout=None):
+    async def snifferMediaUrl(self, playUrl, mode=0, custom_regex=None, timeout=None, css=None):
         """
         输入播放地址，返回嗅探到的真实视频链接
         @param playUrl: 播放网页地址
@@ -250,6 +257,8 @@ class Sniffer:
         t1 = time()
         if custom_regex is None:
             custom_regex = self.custom_regex
+        if css:
+            css = css.strip()
 
         realUrls = []  # 真实链接列表，用于mode=1场景
         headUrls = []  # 已经head请求过的链接
@@ -373,6 +382,15 @@ class Sniffer:
             return {'url': '', 'headers': {}, 'from': playUrl, 'cost': cost, 'code': 404,
                     'msg': f'嗅探失败:{e}'}
 
+        if css:
+            try:
+                item = page.locator(css)
+                await item.wait_for(timeout=self.wait_timeout)
+                await item.click()
+                self.log(f'等待到元素{css}并执行了一次点击')
+            except Exception as e:
+                self.log('等待元素点击发生错误:', e)
+
         is_timeout = False
         if mode == 0:
             try:
@@ -438,6 +456,29 @@ async def main_test():
     print(f'嗅探{_count}个页面共计耗时:{round(t2 - t1, 2)}s')
 
 
+async def specail_test():
+    t1 = time()
+    urls = [
+        # 'https://m.xiangdao.me/vod-play-id-38792-src-1-num-12.html',
+        # 'https://www.7xiady.cc/play/62209-1-1/',
+        'https://www.zxzjhd.com/video/4383-1-1.html',
+        # 'http://www.mgtv.com/v/1/290346/f/3664551.html',
+        # 'https://v.qq.com/x/page/i3038urj2mt.html',
+    ]
+    _count = 0
+    async with Sniffer(debug=True, headless=False) as browser:
+        # 在这里，async_func已被调用并已完成
+        pass
+    for url in urls:
+        _count += 1
+        ret = await browser.snifferMediaUrl(url, timeout=15000, css='button.dplayer-play-icon')
+        print(ret)
+
+    await browser.close()
+    t2 = time()
+    print(f'嗅探{_count}个页面共计耗时:{round(t2 - t1, 2)}s')
+
+
 # 使用异步上下文管理器来调用异步函数
 async def demo_test():
     t1 = time()
@@ -463,6 +504,7 @@ async def demo_test_csdn():
 
 if __name__ == '__main__':
     # 运行事件循环
-    asyncio.run(demo_test())
+    # asyncio.run(demo_test())
+    asyncio.run(specail_test())
     # asyncio.run(demo_test_csdn())
     # asyncio.run(main_test())

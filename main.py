@@ -81,6 +81,8 @@ async def sniffer():
 
     try:
         url = getParams('url')
+        is_pc = getParams('is_pc')
+        css = getParams('css')
         timeout = int(getParams('timeout') or 10000)
         custom_regex = getParams('custom_regex') or None
         mode = int(getParams('mode') or 0)
@@ -95,7 +97,8 @@ async def sniffer():
     else:
         try:
             browser = browser_drivers[0]
-            ret = await browser.snifferMediaUrl(url, mode=mode, timeout=timeout, custom_regex=custom_regex)
+            ret = await browser.snifferMediaUrl(url, mode=mode, timeout=timeout, custom_regex=custom_regex, is_pc=is_pc,
+                                                css=css)
             if app.config.get('DEBUG'):
                 print(ret)
             return await respVodJson(data=ret)
