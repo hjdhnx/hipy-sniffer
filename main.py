@@ -103,7 +103,7 @@ async def sniffer():
                 print(ret)
             return await respVodJson(data=ret)
         except Exception as e:
-            return respErrorJson(error_code.ERROR_INTERNAL(f'执行嗅探发生了错误:{e}'))
+            return respErrorJson(error_code.ERROR_INTERNAL.set_msg(f'执行嗅探发生了错误:{e}'))
 
 
 @app.route("/fetCodeByWebView", methods=['GET'])
@@ -133,7 +133,7 @@ async def fetCodeByWebView():
                 print(ret)
             return await respVodJson(data=ret)
         except Exception as e:
-            return respErrorJson(error_code.ERROR_INTERNAL(f'执行嗅探发生了错误:{e}'))
+            return respErrorJson(error_code.ERROR_INTERNAL.set_msg(f'执行嗅探发生了错误:{e}'))
 
 
 if __name__ == '__main__':

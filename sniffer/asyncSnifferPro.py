@@ -214,7 +214,7 @@ class Sniffer:
         await self.browser.close()
         await self.playwright.stop()
 
-    async def fetCodeByWebView(self, url, headers=None, timeout=None):
+    async def fetCodeByWebView(self, url, headers=None, timeout=None, is_pc=None):
         """
         利用webview请求得到渲染完成后的源码
         @param url: 待获取源码的url
@@ -225,6 +225,8 @@ class Sniffer:
             timeout = self.timeout
         else:
             timeout = min([timeout, self.web_timeout])
+        if not is_pc:
+            is_pc = self.is_pc
         page = await self._get_page(headers)
         # 设置全局导航超时
         page.set_default_navigation_timeout(timeout)
@@ -245,7 +247,7 @@ class Sniffer:
         await self.close_page(page)
         return response
 
-    async def snifferMediaUrl(self, playUrl, mode=0, custom_regex=None, timeout=None, css=None):
+    async def snifferMediaUrl(self, playUrl, mode=0, custom_regex=None, timeout=None, css=None, is_pc=None):
         """
         输入播放地址，返回嗅探到的真实视频链接
         @param playUrl: 播放网页地址
@@ -259,6 +261,8 @@ class Sniffer:
             custom_regex = self.custom_regex
         if css:
             css = css.strip()
+        if not is_pc:
+            is_pc = self.is_pc
 
         realUrls = []  # 真实链接列表，用于mode=1场景
         headUrls = []  # 已经head请求过的链接
