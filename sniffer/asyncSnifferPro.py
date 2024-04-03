@@ -372,6 +372,8 @@ class Sniffer:
         page.set_default_navigation_timeout(timeout)
         # 设置全局等待超时
         page.set_default_timeout(timeout)
+        await page.expose_function("log", lambda *args: print(*args))
+        await page.add_init_script(path="./preload.js")
         await page.evaluate("""
         window.realUrl = ''
         window.realHeaders = {}
@@ -386,14 +388,14 @@ class Sniffer:
             return {'url': '', 'headers': {}, 'from': playUrl, 'cost': cost, 'code': 404,
                     'msg': f'嗅探失败:{e}'}
 
-        if css:
-            try:
-                item = page.locator(css)
-                await item.wait_for(timeout=self.wait_timeout)
-                await item.click()
-                self.log(f'等待到元素{css}并执行了一次点击')
-            except Exception as e:
-                self.log('等待元素点击发生错误:', e)
+        # if css:
+        #     try:
+        #         item = page.locator(css)
+        #         await item.wait_for(timeout=self.wait_timeout)
+        #         await item.click()
+        #         self.log(f'等待到元素{css}并执行了一次点击')
+        #     except Exception as e:
+        #         self.log('等待元素点击发生错误:', e)
 
         is_timeout = False
         if mode == 0:
@@ -465,9 +467,10 @@ async def specail_test():
     urls = [
         # 'https://m.xiangdao.me/vod-play-id-38792-src-1-num-12.html',
         # 'https://www.7xiady.cc/play/62209-1-1/',
-        'https://www.zxzjhd.com/video/4383-1-1.html',
-        # 'http://www.mgtv.com/v/1/290346/f/3664551.html',
-        # 'https://v.qq.com/x/page/i3038urj2mt.html',
+        # 'https://www.zxzjhd.com/video/4383-1-1.html',
+        # 'https://v.nmvod.cn/vod-play-id-38792-src-1-num-12.html',
+        # 'https://www.mgtv.com/b/290346/3664551.html',
+        'https://v.qq.com/x/page/i3038urj2mt.html',
     ]
     _count = 0
     async with Sniffer(debug=True, headless=False) as browser:
@@ -475,7 +478,7 @@ async def specail_test():
         pass
     for url in urls:
         _count += 1
-        ret = await browser.snifferMediaUrl(url, timeout=15000, css='button.dplayer-play-icon')
+        ret = await browser.snifferMediaUrl(url, timeout=10000, css='button.dplayer-play-icon')
         print(ret)
 
     await browser.close()
