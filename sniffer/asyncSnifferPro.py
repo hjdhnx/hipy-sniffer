@@ -373,7 +373,7 @@ class Sniffer:
         # 设置全局等待超时
         page.set_default_timeout(timeout)
         await page.expose_function("log", lambda *args: print(*args))
-        await page.add_init_script(path="./preload.js")
+        await page.add_init_script(path=os.path.join(os.path.dirname(__file__), './preload.js'))
         await page.evaluate("""
         window.realUrl = ''
         window.realHeaders = {}
