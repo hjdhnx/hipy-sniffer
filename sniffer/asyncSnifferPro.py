@@ -509,9 +509,32 @@ async def demo_test_csdn():
     await browser.close()
 
 
+async def demo_test_nm():
+    async with Sniffer(debug=True, headless=False) as browser:
+        # 在这里，async_func已被调用并已完成
+        pass
+    page = await browser.browser.new_page()
+    await page.goto('https://api.cnmcom.com/webcloud/nmm.php?url=')  #
+    lis = await page.locator('li').count()
+    print('共计线路路:', lis)
+    lis = await page.locator('li').all()
+    urls = []
+    for li in lis:
+        await li.click()
+        # iframe = page.locator('#WANG')
+        iframe = page.locator('iframe').first
+        src = await iframe.get_attribute('src')
+        urls.append(src)
+    print(len(urls), urls)
+    # ret = await page.content()
+    # print(ret)
+    await browser.close()
+
+
 if __name__ == '__main__':
     # 运行事件循环
     # asyncio.run(demo_test())
-    asyncio.run(specail_test())
+    # asyncio.run(specail_test())
+    asyncio.run(demo_test_nm())
     # asyncio.run(demo_test_csdn())
     # asyncio.run(main_test())

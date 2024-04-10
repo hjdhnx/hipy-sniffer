@@ -5,6 +5,7 @@
 # Date  : 2024/3/28
 
 from sniffer.asyncSnifferPro import Sniffer, browser_drivers
+from time import time
 import json
 import logging
 from quart import (
@@ -103,7 +104,7 @@ async def sniffer():
                 print(ret)
             return await respVodJson(data=ret)
         except Exception as e:
-            return respErrorJson(error_code.ERROR_INTERNAL.set_msg(f'执行嗅探发生了错误:{e}'))
+            return await respErrorJson(error_code.ERROR_INTERNAL.set_msg(f'执行嗅探发生了错误:{e}'))
 
 
 @app.route("/fetCodeByWebView", methods=['GET'])
@@ -133,7 +134,56 @@ async def fetCodeByWebView():
                 print(ret)
             return await respVodJson(data=ret)
         except Exception as e:
-            return respErrorJson(error_code.ERROR_INTERNAL.set_msg(f'执行嗅探发生了错误:{e}'))
+            return await respErrorJson(error_code.ERROR_INTERNAL.set_msg(f'执行嗅探发生了错误:{e}'))
+
+
+@app.route("/nm", methods=['GET'])
+async def fetNmJx():
+    def getParams(_key=None, _value=''):
+        if _key:
+            return request.args.get(_key) or _value
+        else:
+            return request.args.__dict__['_dict']
+
+    is_all = getParams('all')
+    url = getParams('url') or 'https://api.cnmcom.com/webcloud/nmm.php?url='
+    timeout = 2000
+
+    t1 = time()
+    if not browser_drivers:
+        return await respErrorJson(error_code.ERROR_INTERNAL.set_msg('嗅探器尚未激活,无法处理您的请求'))
+    else:
+        try:
+            browser = browser_drivers[0]
+
+            page = await browser.browser.new_page()
+            # 设置全局导航超时
+            page.set_default_navigation_timeout(timeout)
+            # 设置全局等待超时
+            page.set_default_timeout(timeout)
+
+            await page.goto(url)  #
+            lis = await page.locator('li').count()
+            # print('共计线路路:', lis)
+            if is_all:
+                lis = await page.locator('li').all()
+            else:
+                lis = [page.locator('li').first]
+            urls = []
+            for li in lis:
+                await li.click()
+                # iframe = page.locator('#WANG')
+                iframe = page.locator('iframe').first
+                src = await iframe.get_attribute('src')
+                urls.append(src)
+            cost = round((time() - t1) * 1000, 2)
+            ret = {'data': urls, 'code': 200, 'cost': cost, 'msg': '农民解析获取成功', 'from': url}
+            if app.config.get('DEBUG'):
+                print(ret)
+            await browser.close_page(page)
+            return await respVodJson(data=ret)
+        except Exception as e:
+            return await respErrorJson(error_code.ERROR_INTERNAL.set_msg(f'获取农民解析发生了错误:{e}'))
 
 
 if __name__ == '__main__':
