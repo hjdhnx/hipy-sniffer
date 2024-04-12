@@ -117,6 +117,8 @@ async def fetCodeByWebView():
 
     try:
         url = getParams('url')
+        css = getParams('css')
+        html = getParams('html')
         headers = json.loads(getParams('headers')) if getParams('headers') else None
     except Exception as e:
         return await respErrorJson(error_code.ERROR_PARAMETER_ERROR.set_msg(f'参数校验错误:{e}'))
@@ -129,10 +131,13 @@ async def fetCodeByWebView():
     else:
         try:
             browser = browser_drivers[0]
-            ret = await browser.fetCodeByWebView(url, headers)
+            ret = await browser.fetCodeByWebView(url, headers, css=css)
             if app.config.get('DEBUG'):
                 print(ret)
-            return await respVodJson(data=ret)
+            if html:
+                return await HTMLResponse(ret['content'])
+            else:
+                return await respVodJson(data=ret)
         except Exception as e:
             return await respErrorJson(error_code.ERROR_INTERNAL.set_msg(f'执行嗅探发生了错误:{e}'))
 

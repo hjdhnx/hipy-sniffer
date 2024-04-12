@@ -214,11 +214,12 @@ class Sniffer:
         await self.browser.close()
         await self.playwright.stop()
 
-    async def fetCodeByWebView(self, url, headers=None, timeout=None, is_pc=None):
+    async def fetCodeByWebView(self, url, headers=None, timeout=None, is_pc=None, css=None):
         """
         利用webview请求得到渲染完成后的源码
         @param url: 待获取源码的url
         @return:
+        :param css: 等待出现定位器
         """
         t1 = time()
         if timeout is None:
@@ -238,7 +239,10 @@ class Sniffer:
         except Exception as e:
             self.log(f'发生了错误:{e}')
         else:
-            await page.wait_for_load_state('load')
+            if css:
+                await page.wait_for_selector(css)
+            else:
+                await page.wait_for_load_state('load')
             response['content'] = await page.content()
             response['headers']['location'] = page.url
         t2 = time()
