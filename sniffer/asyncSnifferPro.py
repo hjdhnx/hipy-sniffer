@@ -166,6 +166,9 @@ class Sniffer:
 
         # 添加初始化脚本 提高速度并且过无法播放的验证
         await page.add_init_script(path=os.path.join(os.path.dirname(__file__), './stealth.min.js'))
+        await page.add_init_script(path=os.path.join(os.path.dirname(__file__), './devtools.js'))
+        # 屏蔽控制台监听器 https://cdn.staticfile.net/devtools-detector/2.0.14/devtools-detector.min.js
+        await page.route(re.compile(r"devtools-detector.*\.js$"), lambda route: route.abort())
         # 设置请求头
         if headers is not None:
             await page.set_extra_http_headers(headers=headers)
@@ -174,6 +177,7 @@ class Sniffer:
 
         # 打开静态资源拦截器
         await page.route(re.compile(r"\.(png|jpg|jpeg|css|ttf)$"), self._route_interceptor)
+        # await page.route(re.compile(r"\.(png|jpg|jpeg|ttf)$"), self._route_interceptor)
         # 打开弹窗拦截器
         page.on("dialog", self._on_dialog)
         # 打开页面错误监听
@@ -474,7 +478,10 @@ async def specail_test():
         # 'https://www.zxzjhd.com/video/4383-1-1.html',
         # 'https://v.nmvod.cn/vod-play-id-38792-src-1-num-12.html',
         # 'https://www.mgtv.com/b/290346/3664551.html',
-        'https://v.qq.com/x/page/i3038urj2mt.html',
+        # 'https://v.qq.com/x/page/i3038urj2mt.html',
+        'https://gaze.run/play/3e535f6add8302fd5a82600124a26733',
+        # 'https://gaze.run/play/b42e9f9b1f9fa9f6c9887d307f6fb0c4',
+        # 'https://gaze.run/play/df637347db183050499050991e4ebc8b',
     ]
     _count = 0
     async with Sniffer(debug=True, headless=False) as browser:
@@ -482,7 +489,8 @@ async def specail_test():
         pass
     for url in urls:
         _count += 1
-        ret = await browser.snifferMediaUrl(url, timeout=10000, css='button.dplayer-play-icon')
+        # ret = await browser.snifferMediaUrl(url, timeout=10000, css='button.dplayer-play-icon')
+        ret = await browser.snifferMediaUrl(url, timeout=10000, custom_regex='review_video')
         print(ret)
 
     await browser.close()
@@ -538,7 +546,7 @@ async def demo_test_nm():
 if __name__ == '__main__':
     # 运行事件循环
     # asyncio.run(demo_test())
-    # asyncio.run(specail_test())
-    asyncio.run(demo_test_nm())
+    asyncio.run(specail_test())
+    # asyncio.run(demo_test_nm())
     # asyncio.run(demo_test_csdn())
     # asyncio.run(main_test())

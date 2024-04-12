@@ -30,3 +30,19 @@ function snifferCheck2() {
 if (!location.href.includes("v.nmvod.cn") && sessionStorage._check_enable === '1') {
     snifferCheck2();
 }
+
+function gazeCheck() {
+    log("正在执行js的gazeCheck");
+    let button = document.querySelector(".vjs-big-play-button");
+    if (button) {
+        button.click();
+        sessionStorage._check_enable = '1';
+        log("点击了gaze播放按钮");
+    } else {
+        setTimeout(gazeCheck, 200);
+    }
+}
+
+if (location.href.includes("https://gaze.run/play/")) {
+    gazeCheck();
+}
