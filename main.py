@@ -19,6 +19,7 @@ from quart import (
 from threading import Lock
 from common.resp import HTMLResponse, PlainTextResponse, respSuccessJson, respErrorJson, respVodJson
 from common import error_code
+import ast
 
 _logger = logging.getLogger(__name__)
 lock = Lock()
@@ -84,9 +85,12 @@ async def sniffer():
         url = getParams('url')
         is_pc = getParams('is_pc')
         css = getParams('css')
+        script = getParams('script')
+        _headers = getParams('headers')
         timeout = int(getParams('timeout') or 10000)
         custom_regex = getParams('custom_regex') or None
         mode = int(getParams('mode') or 0)
+        headers = ast.literal_eval(_headers) if _headers else None
     except Exception as e:
         return await respErrorJson(error_code.ERROR_PARAMETER_ERROR.set_msg(f'参数校验错误:{e}'))
 
@@ -99,6 +103,7 @@ async def sniffer():
         try:
             browser = browser_drivers[0]
             ret = await browser.snifferMediaUrl(url, mode=mode, timeout=timeout, custom_regex=custom_regex, is_pc=is_pc,
+                                                script=script, headers=headers,
                                                 css=css)
             if app.config.get('DEBUG'):
                 print(ret)
@@ -119,7 +124,10 @@ async def fetCodeByWebView():
         url = getParams('url')
         css = getParams('css')
         html = getParams('html')
-        headers = json.loads(getParams('headers')) if getParams('headers') else None
+        script = getParams('script')
+        _headers = getParams('headers')
+        # headers = json.loads(_headers) if _headers else None
+        headers = ast.literal_eval(_headers) if _headers else None
     except Exception as e:
         return await respErrorJson(error_code.ERROR_PARAMETER_ERROR.set_msg(f'参数校验错误:{e}'))
 
@@ -131,7 +139,7 @@ async def fetCodeByWebView():
     else:
         try:
             browser = browser_drivers[0]
-            ret = await browser.fetCodeByWebView(url, headers, css=css)
+            ret = await browser.fetCodeByWebView(url, headers, css=css, script=script)
             if app.config.get('DEBUG'):
                 print(ret)
             if html:
@@ -162,14 +170,15 @@ async def fetNmJx():
             browser = browser_drivers[0]
 
             page = await browser.browser.new_page()
+            await page.set_extra_http_headers(headers={'referer': 'https://m.emsdn.cn/'})
             # 设置全局导航超时
             page.set_default_navigation_timeout(timeout)
             # 设置全局等待超时
             page.set_default_timeout(timeout)
 
             await page.goto(url)  #
-            lis = await page.locator('li').count()
-            # print('共计线路路:', lis)
+            lis_count = await page.locator('li').count()
+            # print('共计线路路:', lis_count)
             if is_all:
                 lis = await page.locator('li').all()
             else:

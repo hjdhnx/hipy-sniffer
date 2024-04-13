@@ -74,7 +74,10 @@ async def demo_test_nm():
         # 在这里，async_func已被调用并已完成
         pass
     page = await browser.browser.new_page()
+    await page.set_extra_http_headers(headers={'referer': 'https://m.emsdn.cn/'})
     await page.goto('https://api.cnmcom.com/webcloud/nmm.php?url=')  #
+    html = await page.content()
+    # print(html)
     lis = await page.locator('li').count()
     print('共计线路路:', lis)
     lis = await page.locator('li').all()

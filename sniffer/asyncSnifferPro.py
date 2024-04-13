@@ -218,12 +218,17 @@ class Sniffer:
         await self.browser.close()
         await self.playwright.stop()
 
-    async def fetCodeByWebView(self, url, headers=None, timeout=None, is_pc=None, css=None):
+    async def fetCodeByWebView(self, url, headers=None, timeout=None, is_pc=False, css=None, script=None):
         """
         利用webview请求得到渲染完成后的源码
-        @param url: 待获取源码的url
+        @param url: 待获取源码的网页链接
+        @param headers: 访问网页的浏览器自定义请求头
+        @param timeout: 访问网页的超时毫秒数
+        @param is_pc: 是否用PC.此配置不生效。默认手机访问
+        @param css: 等待出现定位器|如果不传css就等待加载页面状态为load
+        @param script: 页面状态加载完毕后执行的网页脚本，可以点击网页元素之类的
         @return:
-        :param css: 等待出现定位器
+
         """
         t1 = time()
         if timeout is None:
@@ -232,6 +237,7 @@ class Sniffer:
             timeout = min([timeout, self.web_timeout])
         if not is_pc:
             is_pc = self.is_pc
+        do_css = str(css).strip() if css and str(css).strip() else False
         page = await self._get_page(headers)
         # 设置全局导航超时
         page.set_default_navigation_timeout(timeout)
@@ -243,10 +249,21 @@ class Sniffer:
         except Exception as e:
             self.log(f'发生了错误:{e}')
         else:
-            if css:
-                await page.wait_for_selector(css)
+            if do_css:
+                await page.wait_for_selector(do_css)
             else:
                 await page.wait_for_load_state('load')
+
+            if script:
+                try:
+                    await page.evaluate("""(script) => {
+                    eval(script);
+                    }
+                    """, script)
+                    self.log(f'网页加载完成后成功执行脚本:{script}')
+                except Exception as e:
+                    self.log(f'网页加载完成后执行脚本:{script}发生错误:{e}')
+
             response['content'] = await page.content()
             response['headers']['location'] = page.url
         t2 = time()
@@ -255,26 +272,33 @@ class Sniffer:
         await self.close_page(page)
         return response
 
-    async def snifferMediaUrl(self, playUrl, mode=0, custom_regex=None, timeout=None, css=None, is_pc=None):
+    async def snifferMediaUrl(self, playUrl, mode=0, custom_regex=None, timeout=None, css=None, is_pc=False,
+                              headers=None,
+                              script=None):
         """
         输入播放地址，返回嗅探到的真实视频链接
-        @param playUrl: 播放网页地址
+        @param playUrl: 待嗅探的视频播放也地址
         @param mode: 模式:0 嗅探到一个就返回 1:在10秒内嗅探所有的返回列表
         @param custom_regex: 自定义嗅探正则
         @param timeout: 超时
+        @param css: 等待出现定位器|如果不传css并且传了script就等待加载页面状态为load
+        @param is_pc: 是否用PC.此配置不生效。默认手机访问
+        @param headers: 访问网页的浏览器自定义请求头
+        @param script: 页面状态加载完毕后执行的网页脚本，可以点击网页元素之类的
         @return:
         """
         t1 = time()
         if custom_regex is None:
             custom_regex = self.custom_regex
-        if css:
-            css = css.strip()
+
         if not is_pc:
             is_pc = self.is_pc
 
+        do_css = str(css).strip() if css and str(css).strip() else False
+
         realUrls = []  # 真实链接列表，用于mode=1场景
         headUrls = []  # 已经head请求过的链接
-        page = await self._get_page()
+        page = await self._get_page(headers)
         if timeout is None:
             timeout = self.timeout
         else:
@@ -396,14 +420,21 @@ class Sniffer:
             return {'url': '', 'headers': {}, 'from': playUrl, 'cost': cost, 'code': 404,
                     'msg': f'嗅探失败:{e}'}
 
-        # if css:
-        #     try:
-        #         item = page.locator(css)
-        #         await item.wait_for(timeout=self.wait_timeout)
-        #         await item.click()
-        #         self.log(f'等待到元素{css}并执行了一次点击')
-        #     except Exception as e:
-        #         self.log('等待元素点击发生错误:', e)
+        # 这里不需要另外分支去判断状态为load，因为嗅探无需等待页面加载完毕。异步就行。一般也不传css
+        if do_css:
+            await page.wait_for_selector(do_css)
+
+        if script:
+            if not do_css:
+                await page.wait_for_load_state('load')
+            try:
+                await page.evaluate("""(script) => {
+                eval(script);
+                }
+                """, script)
+                self.log(f'网页加载完成后成功执行脚本:{script}')
+            except Exception as e:
+                self.log(f'网页加载完成后执行脚本:{script}发生错误:{e}')
 
         is_timeout = False
         if mode == 0:
@@ -470,83 +501,5 @@ async def main_test():
     print(f'嗅探{_count}个页面共计耗时:{round(t2 - t1, 2)}s')
 
 
-async def specail_test():
-    t1 = time()
-    urls = [
-        # 'https://m.xiangdao.me/vod-play-id-38792-src-1-num-12.html',
-        # 'https://www.7xiady.cc/play/62209-1-1/',
-        # 'https://www.zxzjhd.com/video/4383-1-1.html',
-        # 'https://v.nmvod.cn/vod-play-id-38792-src-1-num-12.html',
-        # 'https://www.mgtv.com/b/290346/3664551.html',
-        # 'https://v.qq.com/x/page/i3038urj2mt.html',
-        'https://gaze.run/play/3e535f6add8302fd5a82600124a26733',
-        # 'https://gaze.run/play/b42e9f9b1f9fa9f6c9887d307f6fb0c4',
-        # 'https://gaze.run/play/df637347db183050499050991e4ebc8b',
-    ]
-    _count = 0
-    async with Sniffer(debug=True, headless=False) as browser:
-        # 在这里，async_func已被调用并已完成
-        pass
-    for url in urls:
-        _count += 1
-        # ret = await browser.snifferMediaUrl(url, timeout=10000, css='button.dplayer-play-icon')
-        ret = await browser.snifferMediaUrl(url, timeout=10000, custom_regex='review_video')
-        print(ret)
-
-    await browser.close()
-    t2 = time()
-    print(f'嗅探{_count}个页面共计耗时:{round(t2 - t1, 2)}s')
-
-
-# 使用异步上下文管理器来调用异步函数
-async def demo_test():
-    t1 = time()
-    async with Sniffer(debug=True) as browser:
-        # 在这里，async_func已被调用并已完成
-        pass
-    # browser = Sniffer(debug=True)
-    ret = await browser.fetCodeByWebView('https://www.ip.cn/api/index?ip&type=0')
-    print(ret)
-    await browser.close()
-    t2 = time()
-    print(f'访问ip网站源码共计耗时:{round(t2 - t1, 2)}s')
-
-
-async def demo_test_csdn():
-    async with Sniffer(debug=True, headless=True) as browser:
-        # 在这里，async_func已被调用并已完成
-        pass
-    ret = await browser.fetCodeByWebView('https://blog.csdn.net/qq_32394351')
-    print(ret)
-    await browser.close()
-
-
-async def demo_test_nm():
-    async with Sniffer(debug=True, headless=False) as browser:
-        # 在这里，async_func已被调用并已完成
-        pass
-    page = await browser.browser.new_page()
-    await page.goto('https://api.cnmcom.com/webcloud/nmm.php?url=')  #
-    lis = await page.locator('li').count()
-    print('共计线路路:', lis)
-    lis = await page.locator('li').all()
-    urls = []
-    for li in lis:
-        await li.click()
-        # iframe = page.locator('#WANG')
-        iframe = page.locator('iframe').first
-        src = await iframe.get_attribute('src')
-        urls.append(src)
-    print(len(urls), urls)
-    # ret = await page.content()
-    # print(ret)
-    await browser.close()
-
-
 if __name__ == '__main__':
-    # 运行事件循环
-    # asyncio.run(demo_test())
-    asyncio.run(specail_test())
-    # asyncio.run(demo_test_nm())
-    # asyncio.run(demo_test_csdn())
-    # asyncio.run(main_test())
+    asyncio.run(main_test())
