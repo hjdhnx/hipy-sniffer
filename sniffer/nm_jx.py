@@ -9,6 +9,7 @@ from asyncSnifferPro import Sniffer
 from time import time, localtime, strftime
 import requests
 import json
+import re
 from urllib3 import encode_multipart_formdata
 import warnings
 
@@ -19,6 +20,7 @@ requests.packages.urllib3.disable_warnings()
 nm_get_url = 'https://igdux.top/~nmjx'
 nm_put_url = 'https://igdux.top/~nmjx:6Q2bC4BWAayiZ3sifysBpJPE'
 timeout = 2000
+MOBILE_UA = 'Mozilla/5.0 (Linux; Android 11; M2007J3SC Build/RKQ1.200826.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.120 MQQBrowser/6.2 TBS/045714 Mobile Safari/537.36'
 
 
 def update_content(content, boundary=None):
@@ -64,18 +66,42 @@ def get_content_dict():
     return ret
 
 
+def get_nm_jx():
+    try:
+        headers = {'referer': 'https://m.emsdn.cn/', 'user-agent': MOBILE_UA}
+        r = requests.get(url='https://m.emsdn.cn/vod-play-id-38905-src-1-num-1.html',
+                         headers=headers,
+                         timeout=5)
+        html = r.text
+        # mac_from=r.text.split('mac_from=')[1].split(',')[0].replace("'",'').replace('"','')
+        mac_from = re.search("mac_from='(.*?)'", html).groups()[0]
+        print('mac_from:', mac_from)
+        js_url = f'https://m.emsdn.cn/player/{mac_from}.js'
+        print('js_url:', js_url)
+        r = requests.get(js_url, headers=headers, timeout=2)
+        html = r.text
+        jx_url = re.search('src="(.*?)\'', html).groups()[0]
+        # print(jx_url.groups())
+        print('解析入口地址:', jx_url)
+        return jx_url
+    except Exception as e:
+        print(f'动态获取解析入口地址发生了错误:{e}')
+        return 'https://api.cnmcom.com/webcloud/nmm.php?url='
+
+
 async def demo_test_nm():
     """
     自动爬取农民解析链接然后对比剪切板内容，如果发生了改变就重新写到剪切板。
     @return:
     """
     t1 = time()
+    from_url = get_nm_jx()
     async with Sniffer(debug=True, headless=True) as browser:
         # 在这里，async_func已被调用并已完成
         pass
     page = await browser.browser.new_page()
     await page.set_extra_http_headers(headers={'referer': 'https://m.emsdn.cn/'})
-    await page.goto('https://api.cnmcom.com/webcloud/nmm.php?url=')  #
+    await page.goto(from_url)  #
     html = await page.content()
     # print(html)
     lis = await page.locator('li').count()
@@ -101,7 +127,7 @@ async def demo_test_nm():
         "code": 200,
         "cost": cost,
         "msg": "农民解析获取成功",
-        "from": "https://api.cnmcom.com/webcloud/nmm.php?url=",
+        "from": from_url,
         "update": time_str,
     }
     old_data = get_content_dict()
@@ -125,3 +151,4 @@ if __name__ == '__main__':
     # 运行事件循环
     asyncio.run(demo_test_nm())
     print(get_content())
+    # get_nm_jx()
