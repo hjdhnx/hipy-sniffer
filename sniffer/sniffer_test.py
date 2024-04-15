@@ -128,11 +128,31 @@ async def demo_test_gaze():
     print(f'嗅探{_count}个页面共计耗时:{round(t2 - t1, 2)}s')
 
 
+async def demo_test_nmjx2():
+    async with Sniffer(debug=True, headless=False) as browser:
+        # 在这里，async_func已被调用并已完成
+        pass
+    page = await browser.browser.new_page()
+    await page.expose_function("log", lambda *args: print(*args))
+    js = """
+Object.defineProperties(navigator, {webdriver: {get: () => undefined}});
+Object.defineProperties(navigator, {platform: {get: () => 'iPhone'}});
+    """
+    await page.add_init_script(js)
+    await page.goto('https://m.emsdn.cn/vod-play-id-38917-src-1-num-1.html')  #
+    iframes = await page.locator('iframe').all()
+    src = await iframes[-1].get_attribute('src')
+    from_url = src.split('=')[0]
+    print('from_url:', from_url)
+    await browser.close()
+
+
 if __name__ == '__main__':
     # 运行事件循环
     # asyncio.run(demo_test())
     # asyncio.run(specail_test())
-    asyncio.run(demo_test_nmjx())
+    # asyncio.run(demo_test_nmjx())
+    asyncio.run(demo_test_nmjx2())
     # asyncio.run(demo_test_gaze())
     # asyncio.run(demo_test_nm())
     # asyncio.run(demo_test_csdn())

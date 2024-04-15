@@ -167,6 +167,7 @@ class Sniffer:
         # 添加初始化脚本 提高速度并且过无法播放的验证
         await page.add_init_script(path=os.path.join(os.path.dirname(__file__), './stealth.min.js'))
         await page.add_init_script(path=os.path.join(os.path.dirname(__file__), './devtools.js'))
+        await page.add_init_script(path=os.path.join(os.path.dirname(__file__), './navigator.js'))
         # 屏蔽控制台监听器 https://cdn.staticfile.net/devtools-detector/2.0.14/devtools-detector.min.js
         await page.route(re.compile(r"devtools-detector.*\.js$"), lambda route: route.abort())
         # 设置请求头
