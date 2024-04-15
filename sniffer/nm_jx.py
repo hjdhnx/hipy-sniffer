@@ -11,11 +11,14 @@ import requests
 import json
 import re
 from urllib3 import encode_multipart_formdata
+from urllib.parse import urljoin
 import warnings
 
 # 关闭警告
 warnings.filterwarnings("ignore")
 requests.packages.urllib3.disable_warnings()
+
+nm_host = 'https://m.emsdn.cn/'
 
 nm_get_url = 'https://igdux.top/~nmjx'
 nm_put_url = 'https://igdux.top/~nmjx:6Q2bC4BWAayiZ3sifysBpJPE'
@@ -68,15 +71,33 @@ def get_content_dict():
 
 def get_nm_jx():
     try:
-        headers = {'referer': 'https://m.emsdn.cn/', 'user-agent': MOBILE_UA}
-        r = requests.get(url='https://m.emsdn.cn/vod-play-id-38905-src-1-num-1.html',
-                         headers=headers,
-                         timeout=5)
+        url = 'https://m.emsdn.cn/vod-play-id-38905-src-1-num-1.html'
+        headers = {'referer': nm_host, 'user-agent': MOBILE_UA}
+        r = requests.get(url=url, headers=headers, timeout=5)
         html = r.text
         # mac_from=r.text.split('mac_from=')[1].split(',')[0].replace("'",'').replace('"','')
         mac_from = re.search("mac_from='(.*?)'", html).groups()[0]
         print('mac_from:', mac_from)
-        js_url = f'https://m.emsdn.cn/player/{mac_from}.js'
+        # print(html)
+        scripts = re.findall('script src="(.*?)"', html, re.M)
+        # print(scripts)
+        js_url = ''
+        for script in scripts:
+            if not str(script).startswith('http') and 'config' not in script:
+                js_url = urljoin(url, script)
+                break
+
+        if not js_url:
+            print(f'未能获取到js文件')
+            return 'https://api.cnmcom.com/webcloud/nmm.php?url='
+        r = requests.get(url=js_url, headers=headers, timeout=5)
+        html = r.text
+        # print(html)
+        jx_path = re.search('SitePath\+"(.*?)"', html).groups()[0]
+        jx_path = urljoin(nm_host, jx_path)
+        print('jx_path:', jx_path)
+        # js_url = f'{nm_host}player/{mac_from}.js'
+        js_url = f'{jx_path}{mac_from}.js'
         print('js_url:', js_url)
         r = requests.get(js_url, headers=headers, timeout=2)
         html = r.text
@@ -100,7 +121,7 @@ async def demo_test_nm():
         # 在这里，async_func已被调用并已完成
         pass
     page = await browser.browser.new_page()
-    await page.set_extra_http_headers(headers={'referer': 'https://m.emsdn.cn/'})
+    await page.set_extra_http_headers(headers={'referer': nm_host})
     await page.goto(from_url)  #
     html = await page.content()
     # print(html)
