@@ -80,20 +80,23 @@ def get_nm_jx():
         print('mac_from:', mac_from)
         # print(html)
         scripts = re.findall('script src="(.*?)"', html, re.M)
+        print(scripts)
+        scripts = [script for script in scripts if
+                   nm_host in script or not str(script).startswith('http') or 'cnmcom' in script]
         # print(scripts)
         js_url = ''
         for script in scripts:
-            if not str(script).startswith('http') and 'config' not in script:
+            if 'config' not in script:
                 js_url = urljoin(url, script)
                 break
-
         if not js_url:
             print(f'未能获取到js文件')
             return 'https://api.cnmcom.com/webcloud/nmm.php?url='
+        print('js_url:', js_url)
         r = requests.get(url=js_url, headers=headers, timeout=5)
         html = r.text
         # print(html)
-        jx_path = re.search('SitePath\+"(.*?)"', html).groups()[0]
+        jx_path = re.search('this.Path="(.*?)"', html).groups()[0]
         jx_path = urljoin(nm_host, jx_path)
         print('jx_path:', jx_path)
         # js_url = f'{nm_host}player/{mac_from}.js'
@@ -116,12 +119,26 @@ async def demo_test_nm():
     @return:
     """
     t1 = time()
-    from_url = get_nm_jx()
+    # from_url = get_nm_jx() # 代码获取from_url解析入口地址
     async with Sniffer(debug=True, headless=True) as browser:
         # 在这里，async_func已被调用并已完成
         pass
     page = await browser.browser.new_page()
+    await page.expose_function("log", lambda *args: print(*args))
     await page.set_extra_http_headers(headers={'referer': nm_host})
+    js = """
+    Object.defineProperties(navigator, {webdriver: {get: () => undefined}});
+    Object.defineProperties(navigator, {platform: {get: () => 'iPhone'}});
+        """
+    await page.add_init_script(js)
+    # ==================== 获取iframe解析入口地址 from_url ======================
+    await page.goto('https://m.emsdn.cn/vod-play-id-38917-src-1-num-1.html')
+    # html = await page.content()
+    # print(html)
+    iframes = await page.locator('iframe').all()
+    src = await iframes[-1].get_attribute('src')
+    from_url = src.split('=')[0] + '='
+    print('解析入口地址:', from_url)
     await page.goto(from_url)  #
     html = await page.content()
     # print(html)
@@ -134,7 +151,7 @@ async def demo_test_nm():
         # iframe = page.locator('#WANG')
         iframe = page.locator('iframe').first
         src = await iframe.get_attribute('src')
-        urls.append(src)
+        urls.append(urljoin(from_url, src))
     await browser.close_page(page)
     await browser.close()
 

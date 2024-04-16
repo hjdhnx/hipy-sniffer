@@ -6,6 +6,7 @@
 
 from sniffer.asyncSnifferPro import Sniffer, browser_drivers
 from time import time
+from urllib.parse import urljoin
 import json
 import logging
 from quart import (
@@ -189,7 +190,7 @@ async def fetNmJx():
                 # iframe = page.locator('#WANG')
                 iframe = page.locator('iframe').first
                 src = await iframe.get_attribute('src')
-                urls.append(src)
+                urls.append(urljoin(url, src))
             cost = round((time() - t1) * 1000, 2)
             ret = {'data': urls, 'code': 200, 'cost': cost, 'msg': '农民解析获取成功', 'from': url}
             if app.config.get('DEBUG'):
