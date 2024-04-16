@@ -96,7 +96,7 @@ def get_nm_jx():
         r = requests.get(url=js_url, headers=headers, timeout=5)
         html = r.text
         # print(html)
-        jx_path = re.search('this.Path="(.*?)"', html).groups()[0]
+        jx_path = re.search('this.Path=.*?"(.*?)"', html).groups()[0]
         jx_path = urljoin(nm_host, jx_path)
         print('jx_path:', jx_path)
         # js_url = f'{nm_host}player/{mac_from}.js'
