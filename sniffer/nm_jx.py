@@ -133,8 +133,8 @@ async def demo_test_nm():
     await page.add_init_script(js)
     # ==================== 获取iframe解析入口地址 from_url ======================
     await page.goto('https://m.emsdn.cn/vod-play-id-38917-src-1-num-1.html')
-    # html = await page.content()
-    # print(html)
+    html = await page.content()
+    print(len(html))
     iframes = await page.locator('iframe').all()
     src = await iframes[-1].get_attribute('src')
     from_url = src.split('=')[0] + '='
