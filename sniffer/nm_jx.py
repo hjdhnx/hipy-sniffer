@@ -113,13 +113,8 @@ def get_nm_jx():
         return 'https://api.cnmcom.com/webcloud/nmm.php?url='
 
 
-async def demo_test_nm():
-    """
-    自动爬取农民解析链接然后对比剪切板内容，如果发生了改变就重新写到剪切板。
-    @return:
-    """
-    t1 = time()
-    # from_url = get_nm_jx() # 代码获取from_url解析入口地址
+async def get_jx_urls(playUrl='https://m.emsdn.cn/vod-play-id-38917-src-1-num-1.html'):
+    urls = []
     async with Sniffer(debug=True, headless=True) as browser:
         # 在这里，async_func已被调用并已完成
         pass
@@ -132,7 +127,8 @@ async def demo_test_nm():
         """
     await page.add_init_script(js)
     # ==================== 获取iframe解析入口地址 from_url ======================
-    await page.goto('https://m.emsdn.cn/vod-play-id-38917-src-1-num-1.html')
+    # from_url = get_nm_jx() # 代码获取from_url解析入口地址
+    await page.goto(playUrl)
     html = await page.content()
     print(len(html))
     iframes = await page.locator('iframe').all()
@@ -145,7 +141,6 @@ async def demo_test_nm():
     lis = await page.locator('li').count()
     print('共计线路路:', lis)
     lis = await page.locator('li').all()
-    urls = []
     for li in lis:
         await li.click()
         # iframe = page.locator('#WANG')
@@ -154,6 +149,23 @@ async def demo_test_nm():
         urls.append(urljoin(from_url, src))
     await browser.close_page(page)
     await browser.close()
+    return urls, from_url
+
+
+async def demo_test_nm():
+    """
+    自动爬取农民解析链接然后对比剪切板内容，如果发生了改变就重新写到剪切板。
+    @return:
+    """
+    t1 = time()
+    playUrl = 'https://m.emsdn.cn/vod-play-id-38917-src-1-num-1.html'
+    error_msg = ''
+    try:
+        urls, from_url = await get_jx_urls(playUrl)
+    except Exception as e:
+        urls = []
+        from_url = playUrl
+        error_msg = f'{e}'
 
     t2 = time()
     cost = round((t2 - t1) * 1000, 2)
@@ -178,6 +190,7 @@ async def demo_test_nm():
     elif len(urls) == 0:
         print('本次没有成功嗅探到农民解析，记录失败时间到剪切板')
         old_data['error_update'] = time_str
+        old_data['error_msg'] = error_msg
         c_data = json.dumps(old_data, ensure_ascii=False)
         update_content(c_data)
     elif old_urls == urls:
