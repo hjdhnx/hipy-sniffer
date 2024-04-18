@@ -94,7 +94,8 @@ class Sniffer:
 
         # 用手动安装的chrome浏览器。不用它自带的三个垃圾浏览器
         browser = await self.playwright.chromium.launch(channel=self.channel, headless=self.headless)
-        # print(self.playwright.devices)
+        # browser = await self.playwright.chromium.launch(executable_path=r'D:\Program Files\via\Application\vivaldi.exe', headless=self.headless)
+        # print(browser.browser_type)
         if not self.is_pc:
             # 模拟使用苹果手机
             iphone = self.playwright.devices["iPhone 14 Pro"]
