@@ -5,6 +5,7 @@
 # Date  : 2024/3/28
 
 from sniffer.asyncSnifferPro import Sniffer, browser_drivers
+from sniffer.nm_function import get_inner_iframe
 from time import time
 from urllib.parse import urljoin
 import json
@@ -160,7 +161,8 @@ async def fetNmJx():
             return request.args.__dict__['_dict']
 
     is_all = getParams('all')
-    url = getParams('url') or 'https://api.cnmcom.com/webcloud/nmm.php?url='
+    # url = getParams('url') or 'https://api.cnmcom.com/webcloud/nmm.php?url='
+    url = getParams('url') or 'https://api.cnmcom.com/webcloud/kan.php?url='
     timeout = 2000
 
     t1 = time()
@@ -171,15 +173,25 @@ async def fetNmJx():
             browser = browser_drivers[0]
 
             page = await browser.browser.new_page()
+            await page.expose_function("log", lambda *args: print(*args))
             await page.set_extra_http_headers(headers={'referer': 'https://m.emsdn.cn/'})
+            js = """
+                Object.defineProperties(navigator, {webdriver: {get: () => undefined}});
+                Object.defineProperties(navigator, {platform: {get: () => 'iPhone'}});
+                    """
+            await page.add_init_script(js)
             # 设置全局导航超时
             page.set_default_navigation_timeout(timeout)
             # 设置全局等待超时
             page.set_default_timeout(timeout)
 
-            await page.goto(url)  #
+            src, html = await get_inner_iframe(page, url)
+            from_url = src.split('=')[0] + '='
+
+            # await page.goto(url)  #
+
             lis_count = await page.locator('li').count()
-            # print('共计线路路:', lis_count)
+            # print('共计线路数:', lis_count)
             if is_all:
                 lis = await page.locator('li').all()
             else:
@@ -192,7 +204,7 @@ async def fetNmJx():
                 src = await iframe.get_attribute('src')
                 urls.append(urljoin(url, src))
             cost = round((time() - t1) * 1000, 2)
-            ret = {'data': urls, 'code': 200, 'cost': cost, 'msg': '农民解析获取成功', 'from': url}
+            ret = {'data': urls, 'code': 200, 'cost': cost, 'msg': '农民解析获取成功', 'from': from_url}
             if app.config.get('DEBUG'):
                 print(ret)
             await browser.close_page(page)

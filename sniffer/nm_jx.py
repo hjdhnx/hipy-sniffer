@@ -6,6 +6,7 @@
 
 import asyncio
 from asyncSnifferPro import Sniffer
+from nm_function import get_inner_iframe
 from time import time, localtime, strftime
 import requests
 import json
@@ -128,18 +129,23 @@ async def get_jx_urls(playUrl='https://m.emsdn.cn/vod-play-id-38917-src-1-num-1.
     await page.add_init_script(js)
     # ==================== 获取iframe解析入口地址 from_url ======================
     # from_url = get_nm_jx() # 代码获取from_url解析入口地址
-    await page.goto(playUrl)
-    html = await page.content()
-    print(len(html))
-    iframes = await page.locator('iframe').all()
-    src = await iframes[-1].get_attribute('src')
+    # await page.goto(playUrl)
+    # html = await page.content()
+    # print(len(html))
+    # iframes = await page.locator('iframe').all()
+    # src = await iframes[-1].get_attribute('src')
+    #
+    src, html = await get_inner_iframe(page, playUrl)
     from_url = src.split('=')[0] + '='
-    print('解析入口地址:', from_url)
-    await page.goto(from_url)  #
-    html = await page.content()
+
+    # html 已经是获取过的了，所以不需要再次访问页面
+    # await page.goto(from_url)
+    # html = await page.content()
     # print(html)
+
+    print('解析入口地址:', from_url)
     lis = await page.locator('li').count()
-    print('共计线路路:', lis)
+    print('共计线路数:', lis)
     lis = await page.locator('li').all()
     for li in lis:
         await li.click()
