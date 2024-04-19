@@ -9,6 +9,10 @@ from urllib.parse import urljoin
 
 async def get_inner_iframe(page, playUrl):
     await page.goto(playUrl)
+    # 定位多层iframe嵌套直接对内部进行定位点击
+    # frame = page.frame_locator('iframe').frame_locator("#WANG")
+    # await frame.locator("li").click()
+
     html = await page.content()
     if 'playlist' in html or 'id="WANG"' in html or '线路①' in html:
         return playUrl, html
