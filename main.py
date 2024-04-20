@@ -184,31 +184,39 @@ async def fetNmJx():
             page.set_default_navigation_timeout(timeout)
             # 设置全局等待超时
             page.set_default_timeout(timeout)
-
-            src, html = await get_inner_iframe(page, url)
-            from_url = src.split('=')[0] + '='
-
-            # await page.goto(url)  #
-
-            lis_count = await page.locator('li').count()
-            # print('共计线路数:', lis_count)
-            if is_all:
-                lis = await page.locator('li').all()
-            else:
-                lis = [page.locator('li').first]
             urls = []
-            for li in lis:
-                await li.click()
-                # iframe = page.locator('#WANG')
-                iframe = page.locator('iframe').first
-                src = await iframe.get_attribute('src')
-                urls.append(urljoin(url, src))
+            from_url = url
+            error_msg = ''
+            try:
+                src, html = await get_inner_iframe(page, url)
+                from_url = src.split('=')[0] + '='
+
+                # await page.goto(url)  #
+
+                lis_count = await page.locator('li').count()
+                # print('共计线路数:', lis_count)
+                if is_all:
+                    lis = await page.locator('li').all()
+                else:
+                    lis = [page.locator('li').first]
+                for li in lis:
+                    await li.click()
+                    # iframe = page.locator('#WANG')
+                    iframe = page.locator('iframe').first
+                    src = await iframe.get_attribute('src')
+                    urls.append(urljoin(url, src))
+            except Exception as e:
+                error_msg = f'获取 urls, from_url 发生了错误:{e}'
+                # print(error_msg)
             cost = round((time() - t1) * 1000, 2)
             ret = {'data': urls, 'code': 200, 'cost': cost, 'msg': '农民解析获取成功', 'from': from_url}
             if app.config.get('DEBUG'):
                 print(ret)
             await browser.close_page(page)
-            return await respVodJson(data=ret)
+            if len(urls) > 0:
+                return await respVodJson(data=ret)
+            else:
+                return await respErrorJson(error_code.ERROR_INTERNAL.set_msg(f'获取农民解析发生了错误:{error_msg}'))
         except Exception as e:
             return await respErrorJson(error_code.ERROR_INTERNAL.set_msg(f'获取农民解析发生了错误:{e}'))
 

@@ -23,7 +23,7 @@ nm_host = 'https://m.emsdn.cn/'
 
 nm_get_url = 'https://igdux.top/~nmjx'
 nm_put_url = 'https://igdux.top/~nmjx:6Q2bC4BWAayiZ3sifysBpJPE'
-timeout = 2000
+timeout = 4000
 MOBILE_UA = 'Mozilla/5.0 (Linux; Android 11; M2007J3SC Build/RKQ1.200826.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.120 MQQBrowser/6.2 TBS/045714 Mobile Safari/537.36'
 
 
@@ -116,6 +116,7 @@ def get_nm_jx():
 
 async def get_jx_urls(playUrl='https://m.emsdn.cn/vod-play-id-38917-src-1-num-1.html'):
     urls = []
+    from_url = playUrl
     async with Sniffer(debug=True, headless=True) as browser:
         # 在这里，async_func已被调用并已完成
         pass
@@ -135,24 +136,27 @@ async def get_jx_urls(playUrl='https://m.emsdn.cn/vod-play-id-38917-src-1-num-1.
     # iframes = await page.locator('iframe').all()
     # src = await iframes[-1].get_attribute('src')
     #
-    src, html = await get_inner_iframe(page, playUrl)
-    from_url = src.split('=')[0] + '='
+    try:
+        src, html = await get_inner_iframe(page, playUrl)
+        from_url = src.split('=')[0] + '='
 
-    # html 已经是获取过的了，所以不需要再次访问页面
-    # await page.goto(from_url)
-    # html = await page.content()
-    # print(html)
+        # html 已经是获取过的了，所以不需要再次访问页面
+        # await page.goto(from_url)
+        # html = await page.content()
+        # print(html)
 
-    print('解析入口地址:', from_url)
-    lis = await page.locator('li').count()
-    print('共计线路数:', lis)
-    lis = await page.locator('li').all()
-    for li in lis:
-        await li.click()
-        # iframe = page.locator('#WANG')
-        iframe = page.locator('iframe').first
-        src = await iframe.get_attribute('src')
-        urls.append(urljoin(from_url, src))
+        print('解析入口地址:', from_url)
+        lis = await page.locator('li').count()
+        print('共计线路数:', lis)
+        lis = await page.locator('li').all()
+        for li in lis:
+            await li.click()
+            # iframe = page.locator('#WANG')
+            iframe = page.locator('iframe').first
+            src = await iframe.get_attribute('src')
+            urls.append(urljoin(from_url, src))
+    except Exception as e:
+        print(f'获取 urls, from_url 发生了错误:{e}')
     await browser.close_page(page)
     await browser.close()
     return urls, from_url
