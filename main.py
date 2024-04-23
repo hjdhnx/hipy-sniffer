@@ -16,12 +16,15 @@ from quart import (
     make_response,
     render_template,
     jsonify,
-    send_from_directory
+    send_from_directory,
+    redirect
 )
 from threading import Lock
-from common.resp import HTMLResponse, PlainTextResponse, respSuccessJson, respErrorJson, respVodJson
+from common.resp import HTMLResponse, PlainTextResponse, M3u8Response, respSuccessJson, respErrorJson, respVodJson
 from common import error_code
+from common.data_map import head_excludes, ysp_map
 import ast
+import requests
 
 _logger = logging.getLogger(__name__)
 lock = Lock()
@@ -58,6 +61,15 @@ async def active_sniffer():
                 async with Sniffer(debug=app.config.get('SNIFFER_DEBUG'),
                                    headless=app.config.get('SNIFFER_HEADLESS'),
                                    use_chrome=app.config.get('USE_CHROME'),
+                                   is_pc=False,
+                                   head_excludes=head_excludes,
+                                   ) as browser:
+                    browser_drivers.append(browser)
+                async with Sniffer(debug=app.config.get('SNIFFER_DEBUG'),
+                                   headless=app.config.get('SNIFFER_HEADLESS'),
+                                   use_chrome=app.config.get('USE_CHROME'),
+                                   is_pc=True,
+                                   head_excludes=head_excludes,
                                    ) as browser:
                     browser_drivers.append(browser)
                 return await respSuccessJson(data=f'嗅探器激活成功,使用的浏览器为:{browser.channel}')
@@ -103,7 +115,7 @@ async def sniffer():
         return await respErrorJson(error_code.ERROR_INTERNAL.set_msg('嗅探器尚未激活,无法处理您的请求'))
     else:
         try:
-            browser = browser_drivers[0]
+            browser = browser_drivers[1] if is_pc else browser_drivers[0]
             ret = await browser.snifferMediaUrl(url, mode=mode, timeout=timeout, custom_regex=custom_regex, is_pc=is_pc,
                                                 script=script, headers=headers,
                                                 css=css)
@@ -219,6 +231,73 @@ async def fetNmJx():
                 return await respErrorJson(error_code.ERROR_INTERNAL.set_msg(f'获取农民解析发生了错误:{error_msg}'))
         except Exception as e:
             return await respErrorJson(error_code.ERROR_INTERNAL.set_msg(f'获取农民解析发生了错误:{e}'))
+
+
+@app.route("/ysp/<name>", methods=['GET'])
+async def getYsp(name: str):
+    def getParams(_key=None, _value=''):
+        if _key:
+            return request.args.get(_key) or _value
+        else:
+            return request.args.__dict__['_dict']
+
+    proxy = getParams('proxy')
+    # cctv1: 600001859
+    _name = name.lower().replace('.m3u8', '')
+    pid = ysp_map.get(_name)
+    if not pid:
+        pid = ysp_map['cctv1']
+    url = f'https://www.yangshipin.cn/#/tv/home?pid={pid}'
+    if not browser_drivers:
+        return await respErrorJson(error_code.ERROR_INTERNAL.set_msg('嗅探器尚未激活,无法处理您的请求'))
+    else:
+        try:
+            browser = browser_drivers[1]
+            ret = await browser.snifferMediaUrl(url, is_pc=True, timeout=6000,
+                                                headers={'referer': 'https://www.yangshipin.cn/'}
+                                                )
+            ysp_url = ret.get('url')
+            if ysp_url:
+                if proxy == '1':
+                    r = requests.get(ysp_url, headers=ret['headers'])
+                    ret = r.text
+                    new_ret = []
+                    for i in ret.split('\n'):
+                        if '.ts' in i:
+                            new_ret.append(urljoin(ysp_url, i))
+                        else:
+                            new_ret.append(i)
+                    ret = '\n'.join(new_ret).strip()
+                    return await M3u8Response(ret)
+                else:
+                    return redirect(ysp_url)
+            return await respVodJson(data=ret)
+        except Exception as e:
+            return await respErrorJson(error_code.ERROR_INTERNAL.set_msg(f'获取央视频发生了错误:{e}'))
+
+
+@app.route("/ysp", methods=['GET'])
+async def getYspLive():
+    def getParams(_key=None, _value=''):
+        if _key:
+            return request.args.get(_key) or _value
+        else:
+            return request.args.__dict__['_dict']
+
+    proxy = getParams('proxy')
+    # url = request.url  # 这个会带query
+    url = request.base_url
+    # print('url:',url)
+    live_tab1 = '央视频道,#genre#'
+    live_tab2 = '卫视频道,#genre#'
+    texts = [live_tab1]
+    for key, value in ysp_map.items():
+        if '卫视' in key and live_tab2 not in texts:
+            texts.append(live_tab2)
+        # texts.append(f'{key.upper()},http://192.168.1.100:2519/ysp/{value}')
+        texts.append(f'{key.upper()},{url}/{key}.m3u8?proxy={proxy}&type={value}.m3u8')
+    live_text = '\n'.join(texts).strip()
+    return await PlainTextResponse(live_text)
 
 
 if __name__ == '__main__':

@@ -5,6 +5,7 @@
 # Date  : 2024/3/28
 # desc 利用playwright实现的简易播放地址嗅探器,异步高性能
 
+
 from playwright.async_api import async_playwright, Playwright
 import re
 import os
@@ -43,7 +44,7 @@ class Sniffer:
 
     def __init__(self,
                  timeout=10000, head_timeout=200, user_agent=None,
-                 custom_regex=None, headless=True, debug=False, use_chrome=True, is_pc=False):
+                 custom_regex=None, headless=True, debug=False, use_chrome=True, is_pc=False, head_excludes=None):
         """
         初始化
         @param timeout: 全局嗅探超时
@@ -64,6 +65,7 @@ class Sniffer:
         self.headless = headless
         self.channel = "chrome" if use_chrome else None
         self.is_pc = is_pc
+        self.head_excludes = head_excludes if isinstance(head_excludes, list) else []
 
     def log(self, *args):
         """
@@ -73,6 +75,20 @@ class Sniffer:
         """
         if self.debug:
             print(*args)
+
+    def can_head_check(self, url):
+        """
+        检查排除head请求
+        @param url:
+        @return:
+        """
+        can_check = True
+        for h in self.head_excludes:
+            if re.search(h, url):
+                can_check = False
+                break
+        # print('can_check:', can_check)
+        return can_check
 
     async def __aenter__(self):
         # 在进入上下文管理器时调用异步函数
@@ -178,8 +194,8 @@ class Sniffer:
             await page.set_extra_http_headers(headers={'user-agent': self.user_agent})
 
         # 打开静态资源拦截器
-        await page.route(re.compile(r"\.(png|jpg|jpeg|css|ttf)$"), self._route_interceptor)
-        # await page.route(re.compile(r"\.(png|jpg|jpeg|ttf)$"), self._route_interceptor)
+        # await page.route(re.compile(r"\.(png|jpg|jpeg|css|ttf)$"), self._route_interceptor)
+        await page.route(re.compile(r"\.(png|jpg|jpeg|ttf)$"), self._route_interceptor)
         # 打开弹窗拦截器
         page.on("dialog", self._on_dialog)
         # 打开页面错误监听
@@ -369,7 +385,7 @@ class Sniffer:
                         '.' in filename and len(filename) > 1 and not filename.split('.')[1]) and resource_type not in [
                     'script']:
                     # 如果链接没有进行过head请求。防止多次嗅探的时候重复去head请求
-                    if url not in headUrls:
+                    if url not in headUrls and self.can_head_check(url):
                         try:
                             r = await self.requests.head(url=url, timeout=self.head_timeout)
                             rheaders = r.headers

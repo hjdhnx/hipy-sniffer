@@ -36,6 +36,12 @@ def PlainTextResponse(content, status_code=200):
     return make_response((content, status_code, headers))
 
 
+def M3u8Response(content, status_code=200):
+    media_type = "application/vnd.apple.mpegurl"
+    headers = {"Content-type": media_type}
+    return make_response((content, status_code, headers))
+
+
 def JSONResponse(content: dict, status_code=200):
     media_type = "application/json; charset=UTF-8"
     headers = {"Content-type": media_type}
