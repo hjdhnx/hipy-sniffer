@@ -250,7 +250,9 @@ async def getYsp(name: str):
     _name = name.lower().replace('.m3u8', '')
     pid = ysp_map.get(_name)
     if not pid:
-        pid = ysp_map['cctv1']
+        _name = 'cctv1'
+        pid = ysp_map[_name]
+
     url = f'https://www.yangshipin.cn/#/tv/home?pid={pid}'
     if not browser_drivers:
         return await respErrorJson(error_code.ERROR_INTERNAL.set_msg('嗅探器尚未激活,无法处理您的请求'))
