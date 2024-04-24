@@ -5,5 +5,6 @@
   "SNIFFER_DEBUG": false,
   "SNIFFER_HEADLESS": true,
   "USE_CHROME": true,
+  "YSP_CACHE": false,
   "MAX_CONTENT_LENGTH": 33554432
 }

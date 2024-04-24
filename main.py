@@ -263,22 +263,25 @@ async def getYsp(name: str):
             headers = {'referer': 'https://www.yangshipin.cn/'}
             ret = {'url': '', 'from': url, 'headers': headers, 'msg': 'failed', 'code': 404,
                    'data': '超级嗅探失败'}
-            if _name in url_store:
-                ysp_url = url_store[_name]
-                try:
-                    r = requests.head(ysp_url, headers={'referer': 'https://www.yangshipin.cn/'})
-                    r_headers = r.headers
-                    if r_headers.get('Content-Type') and r_headers['Content-Type'] == 'application/vnd.apple.mpegurl':
-                        need_sniffer = False
-                        ret = {'url': ysp_url, 'from': url, 'headers': headers, 'msg': 'success', 'code': 200,
-                               'data': '超级嗅探缓存获取成功'}
+            # 配置是否缓存央视|可能缓存结果会断流
+            if app.config.get('YSP_CACHE'):
+                if _name in url_store:
+                    ysp_url = url_store[_name]
+                    try:
+                        r = requests.head(ysp_url, headers={'referer': 'https://www.yangshipin.cn/'})
+                        r_headers = r.headers
+                        if r_headers.get('Content-Type') and r_headers[
+                            'Content-Type'] == 'application/vnd.apple.mpegurl':
+                            need_sniffer = False
+                            ret = {'url': ysp_url, 'from': url, 'headers': headers, 'msg': 'success', 'code': 200,
+                                   'data': '超级嗅探缓存获取成功'}
 
-                except Exception as e:
-                    print(f'head检查时效性失败:{e}')
+                    except Exception as e:
+                        print(f'head检查时效性失败:{e}')
 
             if need_sniffer:
                 browser = browser_drivers[1]
-                ret = await browser.snifferMediaUrl(url, is_pc=True, timeout=6000,
+                ret = await browser.snifferMediaUrl(url, is_pc=True, timeout=8000,
                                                     headers=headers
                                                     )
                 ysp_url = ret.get('url')

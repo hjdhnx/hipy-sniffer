@@ -1,3 +1,4 @@
 playwright
 quart
 pydantic
+requests
