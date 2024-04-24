@@ -253,14 +253,20 @@ async def getYsp(name: str):
         _name = 'cctv1'
         pid = ysp_map[_name]
 
-    url = f'https://www.yangshipin.cn/#/tv/home?pid={pid}'
+    if _name.startswith('cctv6'):
+        url = 'https://www.1905.com/cctv6/live/?index'
+        referer = 'https://www.1905.com/'
+    else:
+        url = f'https://www.yangshipin.cn/#/tv/home?pid={pid}'
+        referer = 'https://www.yangshipin.cn/'
+
     if not browser_drivers:
         return await respErrorJson(error_code.ERROR_INTERNAL.set_msg('嗅探器尚未激活,无法处理您的请求'))
     else:
         try:
             need_sniffer = True
             ysp_url = ''
-            headers = {'referer': 'https://www.yangshipin.cn/'}
+            headers = {'referer': referer}
             ret = {'url': '', 'from': url, 'headers': headers, 'msg': 'failed', 'code': 404,
                    'data': '超级嗅探失败'}
             # 配置是否缓存央视|可能缓存结果会断流
