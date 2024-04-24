@@ -6,6 +6,7 @@
 
 from sniffer.asyncSnifferPro import Sniffer, browser_drivers
 from sniffer.nm_function import get_inner_iframe
+from sniffer.live_spider import liveSearch
 from time import time
 from urllib.parse import urljoin
 import json
@@ -255,53 +256,65 @@ async def getYsp(name: str):
         _name = 'cctv1'
         pid = ysp_map[_name]
 
+    # 直播真实m3u8地址
+    ysp_url = ''
+    referer = 'https://www.yangshipin.cn/'
     if _name.startswith('cctv6'):
         url = 'https://www.1905.com/cctv6/live/?index'
         referer = 'https://www.1905.com/'
     elif _name.startswith('cctv3'):
-        url = 'https://tv.cctv.com/live/cctv3/'
-        referer = 'https://tv.cctv.com/'
+        cctv3 = liveSearch('cctv3')
+        if len(cctv3) > 0:
+            ysp_url = cctv3[0]
+            url = 'http://tonkiang.us/'
+        else:
+            url = 'https://tv.cctv.com/live/cctv3/'
+            referer = 'https://tv.cctv.com/'
     elif _name.startswith('cctv8'):
-        url = 'https://tv.cctv.com/live/cctv8/'
-        referer = 'https://tv.cctv.com/'
+        cctv8 = liveSearch('cctv8')
+        if len(cctv8) > 0:
+            ysp_url = cctv8[0]
+            url = 'http://tonkiang.us/'
+        else:
+            url = 'https://tv.cctv.com/live/cctv8/'
+            referer = 'https://tv.cctv.com/'
     else:
         url = f'https://www.yangshipin.cn/#/tv/home?pid={pid}'
-        referer = 'https://www.yangshipin.cn/'
 
+    headers = {'referer': referer}
     if not browser_drivers:
         return await respErrorJson(error_code.ERROR_INTERNAL.set_msg('嗅探器尚未激活,无法处理您的请求'))
     else:
+        ret = {'url': '', 'from': url, 'headers': headers, 'msg': 'failed', 'code': 404,
+               'data': '超级嗅探失败'}
         try:
-            need_sniffer = True
-            ysp_url = ''
-            headers = {'referer': referer}
-            ret = {'url': '', 'from': url, 'headers': headers, 'msg': 'failed', 'code': 404,
-                   'data': '超级嗅探失败'}
-            # 配置是否缓存央视|可能缓存结果会断流
-            if app.config.get('YSP_CACHE'):
-                if _name in url_store:
-                    ysp_url = url_store[_name]
-                    try:
-                        r = requests.head(ysp_url, headers={'referer': 'https://www.yangshipin.cn/'})
-                        r_headers = r.headers
-                        if r_headers.get('Content-Type') and r_headers[
-                            'Content-Type'] == 'application/vnd.apple.mpegurl':
-                            need_sniffer = False
-                            ret = {'url': ysp_url, 'from': url, 'headers': headers, 'msg': 'success', 'code': 200,
-                                   'data': '超级嗅探缓存获取成功'}
+            if not ysp_url:
+                need_sniffer = True
+                # 配置是否缓存央视|可能缓存结果会断流
+                if app.config.get('YSP_CACHE'):
+                    if _name in url_store:
+                        ysp_url = url_store[_name]
+                        try:
+                            r = requests.head(ysp_url, headers={'referer': 'https://www.yangshipin.cn/'})
+                            r_headers = r.headers
+                            if r_headers.get('Content-Type') and r_headers[
+                                'Content-Type'] == 'application/vnd.apple.mpegurl':
+                                need_sniffer = False
+                                ret = {'url': ysp_url, 'from': url, 'headers': headers, 'msg': 'success', 'code': 200,
+                                       'data': '超级嗅探缓存获取成功'}
 
-                    except Exception as e:
-                        print(f'head检查时效性失败:{e}')
+                        except Exception as e:
+                            print(f'head检查时效性失败:{e}')
 
-            if need_sniffer:
-                browser = browser_drivers[1]
-                ret = await browser.snifferMediaUrl(url, is_pc=True, timeout=8000,
-                                                    headers=headers
-                                                    )
-                ysp_url = ret.get('url')
-                if ysp_url:
-                    url_store[_name] = ysp_url
-                    headers = ret['headers']
+                if need_sniffer:
+                    browser = browser_drivers[1]
+                    ret = await browser.snifferMediaUrl(url, is_pc=True, timeout=8000,
+                                                        headers=headers
+                                                        )
+                    ysp_url = ret.get('url')
+                    if ysp_url:
+                        url_store[_name] = ysp_url
+                        headers = ret['headers']
 
             if ysp_url:
                 if proxy == '1':
