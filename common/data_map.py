@@ -11,6 +11,7 @@ head_excludes = [
     'https://capi.yangshipin.cn/api/.*',
     'https://csapi.yangshipin.cn/voapi/.*',
     'https://comment.yangshipin.cn/web/web_channel_config.*',
+    'https://www.google.com/recaptcha.*',
 ]
 
 # 排除以下链接视为直链
