@@ -22,7 +22,7 @@ from quart import (
 from threading import Lock
 from common.resp import HTMLResponse, PlainTextResponse, M3u8Response, respSuccessJson, respErrorJson, respVodJson
 from common import error_code
-from common.data_map import head_excludes, ysp_map
+from common.data_map import head_excludes, real_url_excludes, ysp_map
 import ast
 import requests
 
@@ -67,6 +67,7 @@ async def active_sniffer():
                                    use_chrome=app.config.get('USE_CHROME'),
                                    is_pc=False,
                                    head_excludes=head_excludes,
+                                   real_url_excludes=real_url_excludes,
                                    ) as browser:
                     browser_drivers.append(browser)
                 async with Sniffer(debug=app.config.get('SNIFFER_DEBUG'),
@@ -74,6 +75,7 @@ async def active_sniffer():
                                    use_chrome=app.config.get('USE_CHROME'),
                                    is_pc=True,
                                    head_excludes=head_excludes,
+                                   real_url_excludes=real_url_excludes,
                                    ) as browser:
                     browser_drivers.append(browser)
                 return await respSuccessJson(data=f'嗅探器激活成功,使用的浏览器为:{browser.channel}')
@@ -256,6 +258,12 @@ async def getYsp(name: str):
     if _name.startswith('cctv6'):
         url = 'https://www.1905.com/cctv6/live/?index'
         referer = 'https://www.1905.com/'
+    elif _name.startswith('cctv3'):
+        url = 'https://tv.cctv.com/live/cctv3/'
+        referer = 'https://tv.cctv.com/'
+    elif _name.startswith('cctv8'):
+        url = 'https://tv.cctv.com/live/cctv8/'
+        referer = 'https://tv.cctv.com/'
     else:
         url = f'https://www.yangshipin.cn/#/tv/home?pid={pid}'
         referer = 'https://www.yangshipin.cn/'

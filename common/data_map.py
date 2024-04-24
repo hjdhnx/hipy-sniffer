@@ -13,6 +13,13 @@ head_excludes = [
     'https://comment.yangshipin.cn/web/web_channel_config.*',
 ]
 
+# 排除以下链接视为直链
+real_url_excludes = [
+    'https://p.data.cctv.com/play.*',
+    '.*cdrmldcctv3_1/index.m3u8',
+    # '.*cdrmldcctv3_1_480P/playlist.m3u8',
+]
+
 # 央视电视台对应的pid
 ysp_map = {'cctv4k': '600002264', 'cctv1': '600001859', 'cctv2': '600001800', 'cctv3(vip)': '600001801',
            'cctv4': '600001814', 'cctv5(限免)': '600001818', 'cctv5+(限免)': '600001817', 'cctv6(vip)': '600001802',

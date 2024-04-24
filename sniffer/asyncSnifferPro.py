@@ -44,7 +44,8 @@ class Sniffer:
 
     def __init__(self,
                  timeout=10000, head_timeout=200, user_agent=None,
-                 custom_regex=None, headless=True, debug=False, use_chrome=True, is_pc=False, head_excludes=None):
+                 custom_regex=None, headless=True, debug=False, use_chrome=True, is_pc=False, head_excludes=None,
+                 real_url_excludes=None):
         """
         初始化
         @param timeout: 全局嗅探超时
@@ -66,6 +67,7 @@ class Sniffer:
         self.channel = "chrome" if use_chrome else None
         self.is_pc = is_pc
         self.head_excludes = head_excludes if isinstance(head_excludes, list) else []
+        self.real_url_excludes = real_url_excludes if isinstance(real_url_excludes, list) else []
 
     def log(self, *args):
         """
@@ -89,6 +91,14 @@ class Sniffer:
                 break
         # print('can_check:', can_check)
         return can_check
+
+    def is_realUrl_check(self, url):
+        is_realUrl = True
+        for h in self.real_url_excludes:
+            if re.search(h, url):
+                is_realUrl = False
+                break
+        return is_realUrl
 
     async def __aenter__(self):
         # 在进入上下文管理器时调用异步函数
@@ -354,7 +364,7 @@ class Sniffer:
                     page.remove_listener("request", _on_request)
                 return True
 
-            if re.search(self.urlRegex, url, re.M | re.I):
+            if re.search(self.urlRegex, url, re.M | re.I) and self.is_realUrl_check(url):
                 if url.find('url=http') < 0 and url.find('v=http') < 0 and url.find('.css') < 0 and url.find(
                         '.html') < 0:
                     _headers = {}
