@@ -28,6 +28,10 @@ import requests
 
 _logger = logging.getLogger(__name__)
 lock = Lock()
+# 接口里储存嗅探过的链接
+url_store = {
+
+}
 
 app = Quart(__name__, static_folder='static')
 app.config['JSON_AS_ASCII'] = False  # 让jsonify()返回的json数据以utf8编码方式正常显示中文
@@ -252,14 +256,37 @@ async def getYsp(name: str):
         return await respErrorJson(error_code.ERROR_INTERNAL.set_msg('嗅探器尚未激活,无法处理您的请求'))
     else:
         try:
-            browser = browser_drivers[1]
-            ret = await browser.snifferMediaUrl(url, is_pc=True, timeout=6000,
-                                                headers={'referer': 'https://www.yangshipin.cn/'}
-                                                )
-            ysp_url = ret.get('url')
+            need_sniffer = True
+            ysp_url = ''
+            headers = {'referer': 'https://www.yangshipin.cn/'}
+            ret = {'url': '', 'from': url, 'headers': headers, 'msg': 'failed', 'code': 404,
+                   'data': '超级嗅探失败'}
+            if _name in url_store:
+                ysp_url = url_store[_name]
+                try:
+                    r = requests.head(ysp_url, headers={'referer': 'https://www.yangshipin.cn/'})
+                    r_headers = r.headers
+                    if r_headers.get('Content-Type') and r_headers['Content-Type'] == 'application/vnd.apple.mpegurl':
+                        need_sniffer = False
+                        ret = {'url': ysp_url, 'from': url, 'headers': headers, 'msg': 'success', 'code': 200,
+                               'data': '超级嗅探缓存获取成功'}
+
+                except Exception as e:
+                    print(f'head检查时效性失败:{e}')
+
+            if need_sniffer:
+                browser = browser_drivers[1]
+                ret = await browser.snifferMediaUrl(url, is_pc=True, timeout=6000,
+                                                    headers=headers
+                                                    )
+                ysp_url = ret.get('url')
+                if ysp_url:
+                    url_store[_name] = ysp_url
+                    headers = ret['headers']
+
             if ysp_url:
                 if proxy == '1':
-                    r = requests.get(ysp_url, headers=ret['headers'])
+                    r = requests.get(ysp_url, headers=headers)
                     ret = r.text
                     new_ret = []
                     for i in ret.split('\n'):

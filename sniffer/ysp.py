@@ -71,6 +71,8 @@ async def main():
     t2 = time()
     count = len(ysp_map.keys())
     print(f'共计耗时:{round((t2 - t1) * 1000, 2)}毫秒,{count} 条直播频道')
+    await browser.close_page(page)
+    await browser.close()
 
 
 if __name__ == '__main__':
