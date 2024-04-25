@@ -12,6 +12,8 @@ head_excludes = [
     'https://csapi.yangshipin.cn/voapi/.*',
     'https://comment.yangshipin.cn/web/web_channel_config.*',
     'https://www.google.com/recaptcha.*',
+    'https://googleads.g.doubleclick.net/pagead.*',
+    'https://ia.51.la/go1.*',
 ]
 
 # 排除以下链接视为直链
