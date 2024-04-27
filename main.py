@@ -181,7 +181,8 @@ async def fetNmJx():
 
     is_all = getParams('all')
     # url = getParams('url') or 'https://api.cnmcom.com/webcloud/nmm.php?url='
-    url = getParams('url') or 'https://api.cnmcom.com/webcloud/kan.php?url='
+    # url = getParams('url') or 'https://api.cnmcom.com/webcloud/kan.php?url='
+    url = getParams('url') or 'https://api.cnmcom.com/webcloud/relay.php?url='
     timeout = 2000
 
     t1 = time()
