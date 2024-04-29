@@ -278,9 +278,15 @@ class Sniffer:
             self.log(f'发生了错误:{e}')
         else:
             if do_css:
-                await page.wait_for_selector(do_css)
+                try:
+                    await page.wait_for_selector(do_css)
+                except Exception as e:
+                    self.log(f'wait_for_selector发生了错误:{e}')
             else:
-                await page.wait_for_load_state('load')
+                try:
+                    await page.wait_for_load_state('load')
+                except Exception as e:
+                    self.log(f'wait_for_load_state发生了错误:{e}')
 
             if script:
                 try:
@@ -443,6 +449,7 @@ class Sniffer:
             await page.goto(playUrl)
         except Exception as e:
             self.log('嗅探发生错误:', e)
+            await self.close_page(page)
             t2 = time()
             cost = round((t2 - t1) * 1000, 2)
             return {'url': '', 'headers': {}, 'from': playUrl, 'cost': cost, 'code': 404,
@@ -450,11 +457,17 @@ class Sniffer:
 
         # 这里不需要另外分支去判断状态为load，因为嗅探无需等待页面加载完毕。异步就行。一般也不传css
         if do_css:
-            await page.wait_for_selector(do_css)
+            try:
+                await page.wait_for_selector(do_css)
+            except Exception as e:
+                self.log(f'do_css发生了错误:{e}')
 
         if script:
             if not do_css:
-                await page.wait_for_load_state('load')
+                try:
+                    await page.wait_for_load_state('load')
+                except Exception as e:
+                    self.log(f'wait_for_load_state 发生了错误:{e}')
             try:
                 await page.evaluate("""(script) => {
                 eval(script);
@@ -468,12 +481,14 @@ class Sniffer:
         if mode == 0:
             try:
                 await page.wait_for_function("() => window.realUrl")
-            except:
+            except Exception as e:
+                self.log(f'page.wait_for_window.realUrl 发生了错误:{e}')
                 is_timeout = True
         elif mode == 1:
             try:
                 await page.wait_for_timeout(timeout)
-            except:
+            except Exception as e:
+                self.log(f'page.wait_for_timeout 发生了错误:{e}')
                 is_timeout = True
 
         realUrl = await page.evaluate('window.realUrl')
