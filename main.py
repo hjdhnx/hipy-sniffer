@@ -7,6 +7,7 @@
 from sniffer.asyncSnifferPro import Sniffer, browser_drivers
 from sniffer.nm_function import get_inner_iframe
 from sniffer.live_spider import liveSearch
+from sniffer.utils import base64Decode, base64Encode, atob, btoa
 from time import time
 from urllib.parse import urljoin
 import json
@@ -89,6 +90,7 @@ async def active_sniffer():
 
 @app.route("/sniffer", methods=['GET'])
 async def sniffer():
+    # http://127.0.0.1:5708/sniffer?url=https://m.emsdn.cn/vod-play-id-39634-src-1-num-1.html&script=dHJ5e2xvY2F0aW9uLmhyZWYgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJpZnJhbWUiKVsxXS5zcmM7fWNhdGNoKGVycikge2xvZygianPngrnlh7vplJnor686IitlcnIubWVzc2FnZSk7fWRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoIi5saW5lIikuY2xpY2soKQ==
     # method = request.method
     # url = request.url
     # headers = request.headers
@@ -107,6 +109,11 @@ async def sniffer():
         is_pc = getParams('is_pc')
         css = getParams('css')
         script = getParams('script')
+        if script:
+            try:
+                script = base64Decode(script)
+            except:
+                script = None
         _headers = getParams('headers')
         timeout = int(getParams('timeout') or 10000)
         custom_regex = getParams('custom_regex') or None
@@ -146,6 +153,11 @@ async def fetCodeByWebView():
         css = getParams('css')
         html = getParams('html')
         script = getParams('script')
+        if script:
+            try:
+                script = base64Decode(script)
+            except:
+                script = None
         _headers = getParams('headers')
         # headers = json.loads(_headers) if _headers else None
         headers = ast.literal_eval(_headers) if _headers else None

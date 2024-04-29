@@ -14,6 +14,7 @@ head_excludes = [
     'https://www.google.com/recaptcha.*',
     'https://googleads.g.doubleclick.net/pagead.*',
     'https://ia.51.la/go1.*',
+    'khmdaawd.rg8e4tt5.com.*',
 ]
 
 # 排除以下链接视为直链

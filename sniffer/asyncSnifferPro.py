@@ -469,10 +469,18 @@ class Sniffer:
                 except Exception as e:
                     self.log(f'wait_for_load_state 发生了错误:{e}')
             try:
-                await page.evaluate("""(script) => {
-                eval(script);
-                }
-                """, script)
+                # script='try{location.href = document.querySelectorAll("iframe")[1].src;}catch(err) {log("执行script错误:"+err.message)}document.querySelector(".line").click()'
+                self.log(f'开始执行网页js: {script}')
+                js_code = """
+                var scriptTimer;
+                scriptTimer = setInterval(function(){
+                log('---执行script---');""" + script + """
+                clearInterval(scriptTimer);
+                },200);
+                """
+                # self.log(js_code)
+                await page.add_init_script(script=js_code)
+                await page.evaluate(js_code)
                 self.log(f'网页加载完成后成功执行脚本:{script}')
             except Exception as e:
                 self.log(f'网页加载完成后执行脚本:{script}发生错误:{e}')
@@ -504,11 +512,14 @@ class Sniffer:
         await self.close_page(page)
         if mode == 0 and realUrl:
             return {'url': realUrl, 'headers': realHeaders, 'from': playUrl, 'cost': cost_str, 'code': 200,
+                    'script': script,
                     'msg': '超级嗅探解析成功'}
         elif mode == 1 and realUrls:
-            return {'urls': realUrls, 'code': 200, 'from': playUrl, 'cost': cost_str, 'msg': '超级嗅探解析成功'}
+            return {'urls': realUrls, 'code': 200, 'from': playUrl, 'cost': cost_str, 'script': script,
+                    'msg': '超级嗅探解析成功'}
         else:
-            return {'url': realUrl, 'headers': realHeaders, 'from': playUrl, 'cost': cost_str, 'code': 404,
+            return {'url': realUrl, 'headers': realHeaders, 'from': playUrl, 'cost': cost_str, 'script': script,
+                    'code': 404,
                     'msg': '超级嗅探解析失败'}
 
 

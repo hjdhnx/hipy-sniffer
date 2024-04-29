@@ -2,8 +2,8 @@
   "DEBUG": false,
   "HOST": "0.0.0.0",
   "PORT": "5708",
-  "SNIFFER_DEBUG": false,
-  "SNIFFER_HEADLESS": true,
+  "SNIFFER_DEBUG": true,
+  "SNIFFER_HEADLESS": false,
   "USE_CHROME": true,
   "YSP_CACHE": false,
   "MAX_CONTENT_LENGTH": 33554432
