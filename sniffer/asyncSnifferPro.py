@@ -273,9 +273,9 @@ class Sniffer:
         page.set_default_timeout(timeout)
         response = {'content': '', 'headers': {'location': url}}
         try:
-            await page.goto(url)
+            await page.goto(url, timeout=200)
         except Exception as e:
-            self.log(f'发生了错误:{e}')
+            self.log(f'fetCodeByWebView:page.goto 发生了错误:{e}')
         else:
             if do_css:
                 try:
@@ -446,14 +446,14 @@ class Sniffer:
         window.realUrls = []
         """)
         try:
-            await page.goto(playUrl)
+            await page.goto(playUrl, timeout=200)
         except Exception as e:
-            self.log('嗅探发生错误:', e)
-            await self.close_page(page)
-            t2 = time()
-            cost = round((t2 - t1) * 1000, 2)
-            return {'url': '', 'headers': {}, 'from': playUrl, 'cost': cost, 'code': 404,
-                    'msg': f'嗅探失败:{e}'}
+            self.log(f'snifferMediaUrl:page.goto发生错误:{e}')
+            # await self.close_page(page)
+            # t2 = time()
+            # cost = round((t2 - t1) * 1000, 2)
+            # return {'url': '', 'headers': {}, 'from': playUrl, 'cost': cost, 'code': 404,
+            #         'msg': f'嗅探失败:{e}'}
 
         # 这里不需要另外分支去判断状态为load，因为嗅探无需等待页面加载完毕。异步就行。一般也不传css
         if do_css:
