@@ -473,9 +473,15 @@ class Sniffer:
                 self.log(f'开始执行网页js: {script}')
                 js_code = """
                 var scriptTimer;
+                var scriptCounter=0;
                 scriptTimer = setInterval(function(){
-                log('---执行script---');""" + script + """
+                if(location.href!='about:blank'){
+                scriptCounter+=1;
+                log('---第'+scriptCounter+'次执行script['+location.href+']---');""" + script + """
                 clearInterval(scriptTimer);
+                scriptCounter=0;
+                log('---执行script成功---');
+                }
                 },200);
                 """
                 # self.log(js_code)
