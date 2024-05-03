@@ -27,6 +27,7 @@ from common import error_code
 from common.data_map import head_excludes, real_url_excludes, ysp_map
 import ast
 import requests
+import os
 
 _logger = logging.getLogger(__name__)
 lock = Lock()
@@ -37,7 +38,10 @@ url_store = {
 
 app = Quart(__name__, static_folder='static')
 app.config['JSON_AS_ASCII'] = False  # 让jsonify()返回的json数据以utf8编码方式正常显示中文
-app.config.from_file("quart_config.json", json.load)
+work_path = os.getcwd()
+config_json_file = os.path.join(work_path, './quart_config.json')
+# app.config.from_file("quart_config.json", json.load)
+app.config.from_file(config_json_file, json.load)
 _logger.info('---quart_config.json加载完毕---')
 
 

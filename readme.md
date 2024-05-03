@@ -23,7 +23,14 @@ pip3 install -r requirements.txt
 
 ### 运行
 ```shell
-python3 main.py
+python main.py
+```
+
+### 打包运行
+```shell
+pip3 install -r build.txt
+python manage.py start
+python manage.py build
 ```
 
 ### linux使用前置条件
