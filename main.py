@@ -334,7 +334,7 @@ async def getYsp(name: str):
                         headers = ret['headers']
 
             if ysp_url:
-                if proxy == '1':
+                if proxy == '1' and app.config.get('YSP_WEB'):
                     r = requests.get(ysp_url, headers=headers)
                     ret = r.text
                     new_ret = []
