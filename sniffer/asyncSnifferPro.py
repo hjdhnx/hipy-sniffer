@@ -206,6 +206,7 @@ class Sniffer:
         # 打开静态资源拦截器
         # await page.route(re.compile(r"\.(png|jpg|jpeg|css|ttf)$"), self._route_interceptor)
         await page.route(re.compile(r"\.(png|jpg|jpeg|ttf)$"), self._route_interceptor)
+        await page.route(re.compile(r".*google\.com.*"), lambda route: route.abort())
         # 打开弹窗拦截器
         page.on("dialog", self._on_dialog)
         # 打开页面错误监听
