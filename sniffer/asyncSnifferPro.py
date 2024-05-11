@@ -28,7 +28,7 @@ browser_drivers = []
 # 全部毫秒为单位不需要转换
 class Sniffer:
     # 正则嗅探匹配表达式
-    urlRegex: str = 'http((?!http).){12,}?\\.(m3u8|mp4|flv|avi|mkv|rm|wmv|mpg|m4a|mp3)\\?.*|http((?!http).){12,}\\.(m3u8|mp4|flv|avi|mkv|rm|wmv|mpg|m4a|mp3)|http((?!http).)*?(video/tos|obj/tos)*'
+    urlRegex: str = 'http((?!http).){12,}?\\.(m3u8|mp4|flv|avi|mkv|rm|wmv|mpg|m4a|mp3)\\?.*|http((?!http).){12,}\\.(m3u8|mp4|flv|avi|mkv|rm|wmv|mpg|m4a|mp3)|http((?!http).)*?video/tos*|http((?!http).)*?obj/tos*'
     urlNoHead: str = 'http((?!http).){12,}?(ac=dm&url=)'
     # 每次嗅探间隔毫秒
     playwright = None
