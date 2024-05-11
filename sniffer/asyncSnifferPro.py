@@ -274,7 +274,8 @@ class Sniffer:
         page.set_default_timeout(timeout)
         response = {'content': '', 'headers': {'location': url}}
         try:
-            await page.goto(url, timeout=200)
+            # await page.goto(url, timeout=200)
+            await page.goto(url, wait_until='domcontentloaded')
         except Exception as e:
             self.log(f'fetCodeByWebView:page.goto 发生了错误:{e}')
         else:
@@ -447,7 +448,8 @@ class Sniffer:
         window.realUrls = []
         """)
         try:
-            await page.goto(playUrl, timeout=200)
+            # await page.goto(playUrl,timeout=200)
+            await page.goto(playUrl, wait_until='domcontentloaded')
         except Exception as e:
             self.log(f'snifferMediaUrl:page.goto发生错误:{e}')
             # await self.close_page(page)
