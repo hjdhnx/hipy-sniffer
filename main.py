@@ -118,6 +118,14 @@ async def sniffer():
                 script = base64Decode(script)
             except:
                 script = None
+        init_script = getParams('init_script')
+        if init_script:
+            try:
+                init_script = base64Decode(init_script)
+            except Exception as e:
+                # print(init_script)
+                # print(f'还原init_script 发生了错误:{e}')
+                init_script = None
         _headers = getParams('headers')
         timeout = int(getParams('timeout') or 10000)
         custom_regex = getParams('custom_regex') or None
@@ -135,7 +143,7 @@ async def sniffer():
         try:
             browser = browser_drivers[1] if is_pc else browser_drivers[0]
             ret = await browser.snifferMediaUrl(url, mode=mode, timeout=timeout, custom_regex=custom_regex, is_pc=is_pc,
-                                                script=script, headers=headers,
+                                                script=script, init_script=init_script, headers=headers,
                                                 css=css)
             if app.config.get('DEBUG'):
                 print(ret)
@@ -162,6 +170,13 @@ async def fetCodeByWebView():
                 script = base64Decode(script)
             except:
                 script = None
+        init_script = getParams('init_script')
+        if init_script:
+            try:
+                init_script = base64Decode(init_script)
+            except Exception as e:
+                print(f'还原 init_script 发生了错误:{e}')
+                init_script = None
         _headers = getParams('headers')
         # headers = json.loads(_headers) if _headers else None
         headers = ast.literal_eval(_headers) if _headers else None
@@ -176,7 +191,7 @@ async def fetCodeByWebView():
     else:
         try:
             browser = browser_drivers[0]
-            ret = await browser.fetCodeByWebView(url, headers, css=css, script=script)
+            ret = await browser.fetCodeByWebView(url, headers, css=css, script=script, init_script=init_script)
             if app.config.get('DEBUG'):
                 print(ret)
             if html:

@@ -20,12 +20,16 @@
 <body>
 <h2>hipy-sniffer|为hipy-server而生的高性能网页嗅探器</h2>
 <h5>端口:{{ port }}</h5>
+<h4>注意:但凡嗅探器里传参script的时候，base64编码后的脚本还需要encodeURIComponent防止存在+号</h4>
 <a id='active' href="/active">访问此处激活您的嗅探器程序</a>
 <div id="test_sniffer">
-    <br/><a href="/sniffer">嗅探器接口</a>
+    <br/><a href="/sniffer?url=">嗅探器接口</a>
     <br/><a href="/ysp">央视频-客户端</a>
     <br/><a href="/ysp?proxy=1">央视频-网页端</a>
-    <br/><a href="/sniffer?url=https://m.emsdn.cn/vod-play-id-39634-src-1-num-1.html&script=dHJ5e2xvY2F0aW9uLmhyZWYgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJpZnJhbWUiKVsxXS5zcmM7fWNhdGNoKGVycikge2xvZygianPngrnlh7vplJnor686IitlcnIubWVzc2FnZSk7fWRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoIi5saW5lIikuY2xpY2soKQ==">农民点击嗅探</a>
+    <br/><a
+        href="/sniffer?url=http://www.xingchenwu.com/juqingpian/bazi/play-0-0.html&init_script=T2JqZWN0LmRlZmluZVByb3BlcnRpZXMobmF2aWdhdG9yLCB7cGxhdGZvcm06IHtnZXQ6ICgpID0%2BICdpUGhvbmUnfX0pOw%3D%3D">星辰篡改嗅探</a>
+    <br/><a
+        href="/sniffer?url=https://m.emsdn.cn/vod-play-id-39634-src-1-num-1.html&script=dHJ5e2xvY2F0aW9uLmhyZWYgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJpZnJhbWUiKVsxXS5zcmM7fWNhdGNoKGVycikge2xvZygianPngrnlh7vplJnor686IitlcnIubWVzc2FnZSk7fWRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoIi5saW5lIikuY2xpY2soKQ==">农民点击嗅探</a>
     <br/><a href="/nm?all=&url=">获取农民解析第1个</a>
     <br/><a href="/nm?all=1&url=">获取农民解析全部</a>
     <br/><a href="https://igdux.top/~nmjx">农民解析剪切板</a>

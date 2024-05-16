@@ -247,7 +247,8 @@ class Sniffer:
         await self.browser.close()
         await self.playwright.stop()
 
-    async def fetCodeByWebView(self, url, headers=None, timeout=None, is_pc=False, css=None, script=None):
+    async def fetCodeByWebView(self, url, headers=None, timeout=None, is_pc=False, css=None, script=None,
+                               init_script=None):
         """
         利用webview请求得到渲染完成后的源码
         @param url: 待获取源码的网页链接
@@ -256,6 +257,7 @@ class Sniffer:
         @param is_pc: 是否用PC.此配置不生效。默认手机访问
         @param css: 等待出现定位器|如果不传css就等待加载页面状态为load
         @param script: 页面状态加载完毕后执行的网页脚本，可以点击网页元素之类的
+        @param init_script: 页面访问网页前执行的初始化网页脚本，可以篡改浏览器特征
         @return:
 
         """
@@ -273,6 +275,12 @@ class Sniffer:
         # 设置全局等待超时
         page.set_default_timeout(timeout)
         response = {'content': '', 'headers': {'location': url}}
+        if init_script:
+            try:
+                self.log(f'开始执行页面初始化js: {init_script}')
+                await page.add_init_script(script=init_script)
+            except Exception as e:
+                self.log(f'执行页面初始化js:{init_script}发生错误:{e}')
         try:
             # await page.goto(url, timeout=200)
             await page.goto(url, wait_until='domcontentloaded')
@@ -310,7 +318,7 @@ class Sniffer:
 
     async def snifferMediaUrl(self, playUrl, mode=0, custom_regex=None, timeout=None, css=None, is_pc=False,
                               headers=None,
-                              script=None):
+                              script=None, init_script=None):
         """
         输入播放地址，返回嗅探到的真实视频链接
         @param playUrl: 待嗅探的视频播放也地址
@@ -321,6 +329,7 @@ class Sniffer:
         @param is_pc: 是否用PC.此配置不生效。默认手机访问
         @param headers: 访问网页的浏览器自定义请求头
         @param script: 页面状态加载完毕后执行的网页脚本，可以点击网页元素之类的
+        @param init_script: 页面访问网页前执行的初始化网页脚本，可以篡改浏览器特征
         @return:
         """
         t1 = time()
@@ -447,6 +456,13 @@ class Sniffer:
         window.realHeaders = {}
         window.realUrls = []
         """)
+        if init_script:
+            try:
+                self.log(f'开始执行页面初始化js: {init_script}')
+                await page.add_init_script(script=init_script)
+            except Exception as e:
+                self.log(f'执行页面初始化js:{init_script}发生错误:{e}')
+
         try:
             # await page.goto(playUrl,timeout=200)
             await page.goto(playUrl, wait_until='domcontentloaded')
@@ -521,13 +537,15 @@ class Sniffer:
         await self.close_page(page)
         if mode == 0 and realUrl:
             return {'url': realUrl, 'headers': realHeaders, 'from': playUrl, 'cost': cost_str, 'code': 200,
-                    'script': script,
+                    'script': script, 'init_script': init_script,
                     'msg': '超级嗅探解析成功'}
         elif mode == 1 and realUrls:
             return {'urls': realUrls, 'code': 200, 'from': playUrl, 'cost': cost_str, 'script': script,
+                    'init_script': init_script,
                     'msg': '超级嗅探解析成功'}
         else:
             return {'url': realUrl, 'headers': realHeaders, 'from': playUrl, 'cost': cost_str, 'script': script,
+                    'init_script': init_script,
                     'code': 404,
                     'msg': '超级嗅探解析失败'}
 
