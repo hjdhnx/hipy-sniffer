@@ -311,7 +311,8 @@ async def getYsp(name: str):
             url = 'https://tv.cctv.com/live/cctv8/'
             referer = 'https://tv.cctv.com/'
     else:
-        url = f'https://www.yangshipin.cn/#/tv/home?pid={pid}'
+        # url = f'https://www.yangshipin.cn/#/tv/home?pid={pid}'
+        url = f'https://www.yangshipin.cn/tv/home?pid={pid}'
 
     headers = {'referer': referer}
     if not browser_drivers:
