@@ -377,6 +377,7 @@ async def getYspLive():
             return request.args.__dict__['_dict']
 
     proxy = getParams('proxy')
+    raw = getParams('raw')
     # url = request.url  # 这个会带query
     url = request.base_url
     # print('url:',url)
@@ -387,7 +388,11 @@ async def getYspLive():
         if '卫视' in key and live_tab2 not in texts:
             texts.append(live_tab2)
         # texts.append(f'{key.upper()},http://192.168.1.100:2519/ysp/{value}')
-        texts.append(f'{key.upper()},{url}/{key}.m3u8?proxy={proxy}&type={value}.m3u8')
+        if raw:
+            play_url = f'https://www.yangshipin.cn/tv/home?pid={value}'
+        else:
+            play_url = f'{url}/{key}.m3u8?proxy={proxy}&type={value}.m3u8'
+        texts.append(f'{key.upper()},{play_url}')
     live_text = '\n'.join(texts).strip()
     return await PlainTextResponse(live_text)
 
