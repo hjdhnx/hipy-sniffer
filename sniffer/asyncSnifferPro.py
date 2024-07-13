@@ -94,10 +94,16 @@ class Sniffer:
 
     def is_realUrl_check(self, url):
         is_realUrl = True
-        for h in self.real_url_excludes:
-            if re.search(h, url):
+        patterns = [re.compile(h) for h in self.real_url_excludes if h]
+        for pattern in patterns:
+            if pattern.findall(url):
                 is_realUrl = False
                 break
+
+        # for h in self.real_url_excludes:
+        #     if re.search(h, url):
+        #         is_realUrl = False
+        #         break
         return is_realUrl
 
     async def __aenter__(self):

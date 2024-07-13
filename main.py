@@ -43,6 +43,9 @@ config_json_file = os.path.join(work_path, './quart_config.json')
 # app.config.from_file("quart_config.json", json.load)
 app.config.from_file(config_json_file, json.load)
 _logger.info('---quart_config.json加载完毕---')
+ads = app.config.get('ADS') or []
+if ads:
+    real_url_excludes.extend(ads)
 
 
 @app.route('/', methods=['GET'])

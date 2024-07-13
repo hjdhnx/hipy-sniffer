@@ -12,6 +12,7 @@ head_excludes = [
     'https://csapi.yangshipin.cn/voapi/.*',
     'https://comment.yangshipin.cn/web/web_channel_config.*',
     'https://www.google.com/recaptcha.*',
+    '.*google.com.*',
     'https://googleads.g.doubleclick.net/pagead.*',
     'https://ia.51.la/go1.*',
     'khmdaawd.rg8e4tt5.com.*',
