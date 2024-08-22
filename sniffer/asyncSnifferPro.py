@@ -322,14 +322,16 @@ class Sniffer:
         await self.close_page(page)
         return response
 
-    async def snifferMediaUrl(self, playUrl, mode=0, custom_regex=None, timeout=None, css=None, is_pc=False,
+    async def snifferMediaUrl(self, playUrl, mode=0, custom_regex=None, sniffer_exclude=None, timeout=None, css=None,
+                              is_pc=False,
                               headers=None,
                               script=None, init_script=None):
         """
         输入播放地址，返回嗅探到的真实视频链接
         @param playUrl: 待嗅探的视频播放也地址
         @param mode: 模式:0 嗅探到一个就返回 1:在10秒内嗅探所有的返回列表
-        @param custom_regex: 自定义嗅探正则
+        @param custom_regex: 自定义嗅探匹配正则
+        @param sniffer_exclude: 自定义嗅探排除正则，优先于匹配正则
         @param timeout: 超时
         @param css: 等待出现定位器|如果不传css并且传了script就等待加载页面状态为load
         @param is_pc: 是否用PC.此配置不生效。默认手机访问
@@ -366,6 +368,9 @@ class Sniffer:
             headers = request.headers
             resource_type = request.resource_type
             self.log('on_request:', url, ' method:', method, ' resource_type:', resource_type)
+            # 链接在嗅探排除正则里直接返回False
+            if sniffer_exclude and re.search(sniffer_exclude, url, re.M | re.I):
+                return False
             if custom_regex and re.search(custom_regex, url, re.M | re.I):
                 _headers = {}
                 if headers.get('referer'):

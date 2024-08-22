@@ -132,6 +132,9 @@ async def sniffer():
         _headers = getParams('headers')
         timeout = int(getParams('timeout') or 10000)
         custom_regex = getParams('custom_regex') or None
+        sniffer_exclude = getParams('sniffer_exclude') or None
+        # print('custom_regex:', custom_regex)
+        # print('sniffer_exclude:', sniffer_exclude)
         mode = int(getParams('mode') or 0)
         headers = ast.literal_eval(_headers) if _headers else None
     except Exception as e:
@@ -145,7 +148,8 @@ async def sniffer():
     else:
         try:
             browser = browser_drivers[1] if is_pc else browser_drivers[0]
-            ret = await browser.snifferMediaUrl(url, mode=mode, timeout=timeout, custom_regex=custom_regex, is_pc=is_pc,
+            ret = await browser.snifferMediaUrl(url, mode=mode, timeout=timeout, custom_regex=custom_regex,
+                                                sniffer_exclude=sniffer_exclude, is_pc=is_pc,
                                                 script=script, init_script=init_script, headers=headers,
                                                 css=css)
             if app.config.get('DEBUG'):
