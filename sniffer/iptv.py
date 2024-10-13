@@ -420,4 +420,4 @@ with open(os.path.join(save_path, "lives.m3u"), 'w', encoding='utf-8') as file:
                 channel_counters[channel_name] = 1
 
 t2 = time.time()
-print(f'共计耗时:{round(t2 - t1), 2}秒')
+print(f'共计耗时:{round(t2 - t1, 2)}秒')
