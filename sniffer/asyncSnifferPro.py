@@ -45,7 +45,7 @@ class Sniffer:
     def __init__(self,
                  timeout=10000, head_timeout=200, user_agent=None,
                  custom_regex=None, headless=True, debug=False, use_chrome=True, is_pc=False, head_excludes=None,
-                 real_url_excludes=None):
+                 real_url_excludes=None, init_new_page=True):
         """
         初始化
         @param timeout: 全局嗅探超时
@@ -68,6 +68,7 @@ class Sniffer:
         self.is_pc = is_pc
         self.head_excludes = head_excludes if isinstance(head_excludes, list) else []
         self.real_url_excludes = real_url_excludes if isinstance(real_url_excludes, list) else []
+        self.init_new_page = init_new_page
 
     def log(self, *args):
         """
@@ -108,13 +109,13 @@ class Sniffer:
 
     async def __aenter__(self):
         # 在进入上下文管理器时调用异步函数
-        print('在进入上下文管理器时调用异步函数')
+        # print('在进入上下文管理器时调用异步函数')
         self.browser = await self.init_browser()
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         # 在上下文管理器退出时执行清理工作
-        print('在上下文管理器退出时执行清理工作')
+        # print('在上下文管理器退出时执行清理工作')
         pass
 
     async def init_browser(self):
@@ -135,7 +136,8 @@ class Sniffer:
         else:
             context = await browser.new_context()
         # 开启一个主窗口方便后续的page新开和关闭不会退出程序
-        self.main_page = await context.new_page()
+        if self.init_new_page:
+            self.main_page = await context.new_page()
         # 上下文自带的request库，跟requests库有点类似，但是用法也有差别
         self.requests = context.request
         # return browser
@@ -249,7 +251,8 @@ class Sniffer:
         用完记得关闭驱动器
         @return:
         """
-        await self.main_page.close()
+        if self.init_new_page:
+            await self.main_page.close()
         await self.browser.close()
         await self.playwright.stop()
 

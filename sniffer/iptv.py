@@ -1,7 +1,9 @@
 import json
 import time
+from datetime import datetime
 import concurrent.futures
 from asyncSnifferPro import Sniffer
+from iptv_urls import *
 from pathlib import Path
 import asyncio
 import requests
@@ -26,25 +28,7 @@ if not os.path.exists(save_path):
     os.makedirs(save_path, exist_ok=True)
 print('save_path:', save_path)
 t1 = time.time()
-urls = [
-    "https://fofa.info/result?qbase64=ImlwdHYvbGl2ZS96aF9jbi5qcyIgJiYgY291bnRyeT0iQ04iICYmIHJlZ2lvbj0iU2ljaHVhbiI%3D",
-    # 四川
-    "https://fofa.info/result?qbase64=ImlwdHYvbGl2ZS96aF9jbi5qcyIgJiYgY291bnRyeT0iQ04iICYmIHJlZ2lvbj0i5LqR5Y2XIg%3D%3D",
-    # 云南
-    "https://fofa.info/result?qbase64=ImlwdHYvbGl2ZS96aF9jbi5qcyIgJiYgY291bnRyeT0iQ04iICYmIHJlZ2lvbj0iQ2hvbmdxaW5nIg%3D%3D",
-    # 重庆
-    "https://fofa.info/result?qbase64=ImlwdHYvbGl2ZS96aF9jbi5qcyIgJiYgY291bnRyeT0iQ04iICYmIHJlZ2lvbj0iR3VpemhvdSI%3D",
-    # 贵州
-    "https://fofa.info/result?qbase64=ImlwdHYvbGl2ZS96aF9jbi5qcyIgJiYgY291bnRyeT0iQ04iICYmIHJlZ2lvbj0iU2hhbnhpIg%3D%3D",
-    # 山西
-    "https://fofa.info/result?qbase64=ImlwdHYvbGl2ZS96aF9jbi5qcyIgJiYgY291bnRyeT0iQ04iICYmIHJlZ2lvbj0iR3Vhbmd4aSBaaHVhbmd6dSI%3D",
-    # 广西
-
-    "https://www.zoomeye.org/searchResult?q=%2Fiptv%2Flive%2Fzh_cn.js%20%2Bcountry%3A%22CN%22%20%2Bsubdivisions%3A%22guangxi%22",
-    # 广西
-    "https://www.zoomeye.org/searchResult?q=%2Fiptv%2Flive%2Fzh_cn.js%20%2Bcountry%3A%22CN%22%20%2Bsubdivisions%3A%22hebei%22",
-    # 河北
-]
+urls = urls2
 
 replace_dict1 = {
     "cctv": "CCTV",
@@ -127,7 +111,7 @@ results = []
 async def get_page_content(url):
     # async with Sniffer(debug=True, headless=True) as browser:
     async with Sniffer(debug=config_dict['DEBUG'], headless=config_dict['SNIFFER_HEADLESS'],
-                       use_chrome=config_dict['USE_CHROME']) as browser:
+                       use_chrome=config_dict['USE_CHROME'], init_new_page=False) as browser:
         # 在这里，async_func已被调用并已完成
         pass
     page = await browser.browser.new_page()
@@ -148,16 +132,17 @@ Object.defineProperties(navigator, {platform: {get: () => 'iPhone'}});
     return content
 
 
-for url in urls:
+urls_count = len(urls)
+for index, url in enumerate(urls):
+    print(f'get_page_content for {url} ({index + 1}/{urls_count})')
     page_content = asyncio.run(get_page_content(url))
-    # print(page_content)
+    # print(len(page_content))
     # 查找所有符合指定格式的网址
     pattern = r"http://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+"  # 设置匹配的格式，如http://8.8.8.8:8888
     urls_all = re.findall(pattern, page_content)
     # urls = list(set(urls_all))  # 去重得到唯一的URL列表
     urls = set(urls_all)  # 去重得到唯一的URL列表
     x_urls = []
-    print(len(urls), urls)
     for url in urls:  # 对urls进行处理，ip第四位修改为1，并去重
         url = url.strip()
         ip_start_index = url.find("//") + 2
@@ -173,14 +158,20 @@ for url in urls:
         x_url = f"{base_url}{modified_ip}{port}"
         x_urls.append(x_url)
     urls = set(x_urls)  # 去重得到唯一的URL列表
-
+    print(len(urls), urls)
+    if len(urls) < 1:
+        continue
+    # max_workers = min(max(len(urls), 1), 100)
+    max_workers = 100
+    # print(f'max_workers:{max_workers}')
     valid_urls = []
     #   多线程获取可用url
-    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
         for url in urls:
             url = url.strip()
             modified_urls = modify_urls(url)
+            # print(f'modified_urls:{modified_urls}')
             for modified_url in modified_urls:
                 futures.append(executor.submit(is_url_accessible, modified_url))
 
@@ -324,10 +315,13 @@ results.sort(key=lambda x: (x[0], -float(x[2].split()[0])))
 results.sort(key=lambda x: channel_key(x[0]))
 
 result_counter = 8  # 每个频道需要的个数
-
+today = datetime.now()
+formatted_date = today.strftime('%Y年%m月%d日')
+first_channel_url = results[0][1]
 with open(os.path.join(save_path, "lives.txt"), 'w', encoding='utf-8') as file:
     channel_counters = {}
-    file.write('央视频道,#genre#\n')
+    file.write(f'📺｜定期维护,#genre#\n{formatted_date}更新,{first_channel_url}\n')
+    file.write('🌏｜央视频道,#genre#\n')
     for result in results:
         channel_name, channel_url, speed = result
         if 'CCTV' in channel_name:
@@ -341,7 +335,7 @@ with open(os.path.join(save_path, "lives.txt"), 'w', encoding='utf-8') as file:
                 file.write(f"{channel_name},{channel_url}\n")
                 channel_counters[channel_name] = 1
     channel_counters = {}
-    file.write('卫视频道,#genre#\n')
+    file.write('🛰｜卫视频道,#genre#\n')
     for result in results:
         channel_name, channel_url, speed = result
         if '卫视' in channel_name:
@@ -355,7 +349,7 @@ with open(os.path.join(save_path, "lives.txt"), 'w', encoding='utf-8') as file:
                 file.write(f"{channel_name},{channel_url}\n")
                 channel_counters[channel_name] = 1
     channel_counters = {}
-    file.write('其他频道,#genre#\n')
+    file.write('👑｜其他频道,#genre#\n')
     for result in results:
         channel_name, channel_url, speed = result
         if 'CCTV' not in channel_name and '卫视' not in channel_name and '测试' not in channel_name:
@@ -372,6 +366,8 @@ with open(os.path.join(save_path, "lives.txt"), 'w', encoding='utf-8') as file:
 with open(os.path.join(save_path, "lives.m3u"), 'w', encoding='utf-8') as file:
     channel_counters = {}
     file.write('#EXTM3U\n')
+    file.write(f"#EXTINF:-1 group-title=\"📺｜定期维护\",{formatted_date}更新\n")
+    file.write(f"{first_channel_url}\n")
     for result in results:
         channel_name, channel_url, speed = result
         if 'CCTV' in channel_name:
