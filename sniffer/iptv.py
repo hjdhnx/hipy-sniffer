@@ -14,6 +14,8 @@ from queue import Queue
 import eventlet
 
 eventlet.monkey_patch()
+today = datetime.now()
+formatted_date = today.strftime('%Y年%m月%d日')[2:]
 
 config_path = Path(os.path.abspath(os.path.join(os.path.dirname(__file__), '../quart_config.json'))).as_posix()
 print(config_path)
@@ -315,12 +317,9 @@ results.sort(key=lambda x: (x[0], -float(x[2].split()[0])))
 results.sort(key=lambda x: channel_key(x[0]))
 
 result_counter = 8  # 每个频道需要的个数
-today = datetime.now()
-formatted_date = today.strftime('%Y年%m月%d日')
 first_channel_url = results[0][1]
 with open(os.path.join(save_path, "lives.txt"), 'w', encoding='utf-8') as file:
     channel_counters = {}
-    file.write(f'📺｜定期维护,#genre#\n{formatted_date}更新,{first_channel_url}\n')
     file.write('🌏｜央视频道,#genre#\n')
     for result in results:
         channel_name, channel_url, speed = result
@@ -363,10 +362,11 @@ with open(os.path.join(save_path, "lives.txt"), 'w', encoding='utf-8') as file:
                 file.write(f"{channel_name},{channel_url}\n")
                 channel_counters[channel_name] = 1
 
+    file.write(f'📺｜定期维护,#genre#\n{formatted_date}更新,{first_channel_url}\n')
+
 with open(os.path.join(save_path, "lives.m3u"), 'w', encoding='utf-8') as file:
     channel_counters = {}
     file.write('#EXTM3U\n')
-    file.write(f"#EXTINF:-1 group-title=\"📺｜定期维护\",{formatted_date}更新\n")
     file.write(f"{first_channel_url}\n")
     for result in results:
         channel_name, channel_url, speed = result
@@ -414,6 +414,8 @@ with open(os.path.join(save_path, "lives.m3u"), 'w', encoding='utf-8') as file:
                 file.write(f"#EXTINF:-1 group-title=\"其他频道\",{channel_name}\n")
                 file.write(f"{channel_url}\n")
                 channel_counters[channel_name] = 1
+
+    file.write(f"#EXTINF:-1 group-title=\"📺｜定期维护\",{formatted_date}更新\n")
 
 t2 = time.time()
 print(f'共计耗时:{round(t2 - t1, 2)}秒')
