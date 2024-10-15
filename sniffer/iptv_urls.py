@@ -4,6 +4,7 @@
 # Author: DaShenHan&道长-----先苦后甜，任凭晚风拂柳颜------
 # Author's Blog: https://blog.csdn.net/qq_32394351
 # Date  : 2024/10/16
+from urllib.parse import quote
 
 urls0 = [
     "https://fofa.info/result?qbase64=ImlwdHYvbGl2ZS96aF9jbi5qcyIgJiYgY291bnRyeT0iQ04iICYmIHJlZ2lvbj0iU2ljaHVhbiI%3D",
@@ -145,3 +146,15 @@ urls1 = [
     "https://fofa.info/result?qbase64=IlpIR1hUViIgJiYgY2l0eT0iYmFvdG91Ig==",  # 包头
     "https://fofa.info/result?qbase64=IlpIR1hUViIgJiYgY2l0eT0ieml5YW5nIg==",  # 资阳
 ]
+
+_q = [
+    '/iptv/live/zh_cn.js +country:"CN" +subdivisions:"{}"'.format(city)
+    for city in [
+        '广西', '广东', '陕西', '湖南', '山西', '湖北', '河北'
+    ]
+]
+urls2 = [
+    f"https://www.zoomeye.org/searchResult?q={quote(_u)}"
+    for _u in _q
+]
+# print(urls2)

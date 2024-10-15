@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 import concurrent.futures
 from asyncSnifferPro import Sniffer
-from iptv_urls import urls0, urls1
+from iptv_urls import *
 from pathlib import Path
 import asyncio
 import requests
@@ -28,7 +28,7 @@ if not os.path.exists(save_path):
     os.makedirs(save_path, exist_ok=True)
 print('save_path:', save_path)
 t1 = time.time()
-urls = urls0
+urls = urls2
 
 replace_dict1 = {
     "cctv": "CCTV",
@@ -136,7 +136,7 @@ urls_count = len(urls)
 for index, url in enumerate(urls):
     print(f'get_page_content for {url} ({index + 1}/{urls_count})')
     page_content = asyncio.run(get_page_content(url))
-    print(len(page_content))
+    # print(len(page_content))
     # 查找所有符合指定格式的网址
     pattern = r"http://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+"  # 设置匹配的格式，如http://8.8.8.8:8888
     urls_all = re.findall(pattern, page_content)
@@ -163,7 +163,7 @@ for index, url in enumerate(urls):
         continue
     # max_workers = min(max(len(urls), 1), 100)
     max_workers = 100
-    print(f'max_workers:{max_workers}')
+    # print(f'max_workers:{max_workers}')
     valid_urls = []
     #   多线程获取可用url
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -171,7 +171,7 @@ for index, url in enumerate(urls):
         for url in urls:
             url = url.strip()
             modified_urls = modify_urls(url)
-            print(f'modified_urls:{modified_urls}')
+            # print(f'modified_urls:{modified_urls}')
             for modified_url in modified_urls:
                 futures.append(executor.submit(is_url_accessible, modified_url))
 
