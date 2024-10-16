@@ -21,5 +21,6 @@ if [ $? -eq 0 ]; then
   git push origin main  # 修改 'main' 为你的实际分支名
 else
   echo "No changes to static/lives/lives.m3u or static/lives/lives.txt"
+  git push
 fi
 
