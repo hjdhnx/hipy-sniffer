@@ -1,4 +1,5 @@
 #!/bin/bash
+export HOME=/root
 source ~/.bashrc
 
 # 设置 Git 用户信息
