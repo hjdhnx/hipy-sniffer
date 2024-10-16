@@ -18,7 +18,7 @@ from queue import Queue
 import asyncio
 from playwright.async_api import async_playwright
 
-semaphore = asyncio.Semaphore(20)
+semaphore = asyncio.Semaphore(3)
 
 import eventlet
 
@@ -108,6 +108,31 @@ channels = []
 error_channels = []
 
 
+async def _on_dialog(dialog):
+    """
+    全局弹窗拦截器
+    @param dialog:
+    @return:
+    """
+    print('_on_dialog:', dialog)
+    await dialog.accept()
+
+
+async def _on_pageerror(error):
+    """
+    全局页面请求错误拦截器
+    @param error:
+    @return:
+    """
+    print('_on_pageerror:', error)
+    pass
+
+
+async def _on_crash(*args):
+    print(f"_on_crash:Page has crashed! {len(args)}")
+    # await page.close()  # 关闭页面或采取其他措施
+
+
 # 异步获取页面源码
 async def get_page_source(url, timeout, channel, headless):
     async with semaphore:  # 在任务开始前获取信号量
@@ -116,6 +141,13 @@ async def get_page_source(url, timeout, channel, headless):
             browser = await p.chromium.launch(channel=channel, headless=headless)  # 启动浏览器
             context = await browser.new_context()  # 创建新的浏览器上下文
             page = await context.new_page()  # 创建新页面
+            # 打开弹窗拦截器
+            page.on("dialog", _on_dialog)
+            # 打开页面错误监听
+            page.on("pageerror", _on_pageerror)
+            # 打开页面崩溃监听
+            page.on("crash", _on_crash)
+
             print('goto:', url)
             try:
                 await page.goto(url)  # 打开指定网址
