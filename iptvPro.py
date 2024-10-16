@@ -117,9 +117,13 @@ async def get_page_source(url, timeout, channel, headless):
             context = await browser.new_context()  # 创建新的浏览器上下文
             page = await context.new_page()  # 创建新页面
             print('goto:', url)
-            await page.goto(url)  # 打开指定网址
-            await page.wait_for_timeout(timeout)
-            content = await page.content()  # 获取页面渲染后的源码
+            try:
+                await page.goto(url)  # 打开指定网址
+                await page.wait_for_timeout(timeout)
+                content = await page.content()  # 获取页面渲染后的源码
+            except Exception as e:
+                print(f'get_page_source error:{e}')
+                content = ''
             await context.close()  # 关闭上下文
             await browser.close()  # 关闭浏览器
         return content
