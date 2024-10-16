@@ -1,5 +1,9 @@
 #!/bin/bash
+source ~/.bashrc
 
+# 设置 Git 用户信息
+git config --global user.name "晚风拂柳颜"
+git config --global user.email "434857005@qq.com"
 # 检查是否有待提交的文件
 git status --porcelain | grep -qE 'static/lives/lives.m3u|static/lives/lives.txt'
 
