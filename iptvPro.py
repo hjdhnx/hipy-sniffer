@@ -167,6 +167,13 @@ async def _get_page(page, timeout=10000, headers=None):
     # 设置全局等待超时
     page.set_default_timeout(timeout)
 
+    await page.expose_function("log", lambda *args: print(*args))
+    js = """
+    Object.defineProperties(navigator, {webdriver: {get: () => undefined}});
+    Object.defineProperties(navigator, {platform: {get: () => 'iPhone'}});
+        """
+    await page.add_init_script(js)
+
     # 添加初始化脚本 提高速度并且过无法播放的验证
     await page.add_init_script(path=os.path.join(base_dir, './sniffer/stealth.min.js'))
     await page.add_init_script(path=os.path.join(base_dir, './sniffer/devtools.js'))
