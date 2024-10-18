@@ -17,8 +17,14 @@ import threading
 from queue import Queue
 import asyncio
 from playwright.async_api import async_playwright
+import argparse
 
-semaphore = asyncio.Semaphore(3)
+max_thread = 7
+parser = argparse.ArgumentParser(description="sniff iptv with some custom settings")
+parser.add_argument("-m", '--max_thread', default=max_thread, type=str, help=f"thread,default is {max_thread}")
+args = parser.parse_args()
+print('max_thread:', args.max_thread)
+semaphore = asyncio.Semaphore(int(args.max_thread))
 
 import eventlet
 
@@ -442,11 +448,11 @@ def main():
                     if channel_counters[channel_name] >= result_counter:
                         continue
                     else:
-                        file.write(f"#EXTINF:-1 group-title=\"央视频道\",{channel_name}\n")
+                        file.write(f"#EXTINF:-1 group-title=\"🌏｜央视频道\",{channel_name}\n")
                         file.write(f"{channel_url}\n")
                         channel_counters[channel_name] += 1
                 else:
-                    file.write(f"#EXTINF:-1 group-title=\"央视频道\",{channel_name}\n")
+                    file.write(f"#EXTINF:-1 group-title=\"🌏｜央视频道\",{channel_name}\n")
                     file.write(f"{channel_url}\n")
                     channel_counters[channel_name] = 1
         channel_counters = {}
@@ -458,11 +464,11 @@ def main():
                     if channel_counters[channel_name] >= result_counter:
                         continue
                     else:
-                        file.write(f"#EXTINF:-1 group-title=\"卫视频道\",{channel_name}\n")
+                        file.write(f"#EXTINF:-1 group-title=\"🛰｜卫视频道\",{channel_name}\n")
                         file.write(f"{channel_url}\n")
                         channel_counters[channel_name] += 1
                 else:
-                    file.write(f"#EXTINF:-1 group-title=\"卫视频道\",{channel_name}\n")
+                    file.write(f"#EXTINF:-1 group-title=\"🛰｜卫视频道\",{channel_name}\n")
                     file.write(f"{channel_url}\n")
                     channel_counters[channel_name] = 1
         channel_counters = {}
@@ -474,15 +480,16 @@ def main():
                     if channel_counters[channel_name] >= result_counter:
                         continue
                     else:
-                        file.write(f"#EXTINF:-1 group-title=\"其他频道\",{channel_name}\n")
+                        file.write(f"#EXTINF:-1 group-title=\"👑｜其他频道\",{channel_name}\n")
                         file.write(f"{channel_url}\n")
                         channel_counters[channel_name] += 1
                 else:
-                    file.write(f"#EXTINF:-1 group-title=\"其他频道\",{channel_name}\n")
+                    file.write(f"#EXTINF:-1 group-title=\"👑｜其他频道\",{channel_name}\n")
                     file.write(f"{channel_url}\n")
                     channel_counters[channel_name] = 1
 
         file.write(f"#EXTINF:-1 group-title=\"📺｜定期维护\",{formatted_date}更新\n")
+        file.write(f"{first_channel_url}\n")
 
     t2 = time.time()
     print(f'共计耗时:{round(t2 - t1, 2)}秒')

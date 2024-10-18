@@ -375,11 +375,11 @@ with open(os.path.join(save_path, "lives.m3u"), 'w', encoding='utf-8') as file:
                 if channel_counters[channel_name] >= result_counter:
                     continue
                 else:
-                    file.write(f"#EXTINF:-1 group-title=\"央视频道\",{channel_name}\n")
+                    file.write(f"#EXTINF:-1 group-title=\"🌏｜央视频道\",{channel_name}\n")
                     file.write(f"{channel_url}\n")
                     channel_counters[channel_name] += 1
             else:
-                file.write(f"#EXTINF:-1 group-title=\"央视频道\",{channel_name}\n")
+                file.write(f"#EXTINF:-1 group-title=\"🌏｜央视频道\",{channel_name}\n")
                 file.write(f"{channel_url}\n")
                 channel_counters[channel_name] = 1
     channel_counters = {}
@@ -391,11 +391,11 @@ with open(os.path.join(save_path, "lives.m3u"), 'w', encoding='utf-8') as file:
                 if channel_counters[channel_name] >= result_counter:
                     continue
                 else:
-                    file.write(f"#EXTINF:-1 group-title=\"卫视频道\",{channel_name}\n")
+                    file.write(f"#EXTINF:-1 group-title=\"🛰｜卫视频道\",{channel_name}\n")
                     file.write(f"{channel_url}\n")
                     channel_counters[channel_name] += 1
             else:
-                file.write(f"#EXTINF:-1 group-title=\"卫视频道\",{channel_name}\n")
+                file.write(f"#EXTINF:-1 group-title=\"🛰｜卫视频道\",{channel_name}\n")
                 file.write(f"{channel_url}\n")
                 channel_counters[channel_name] = 1
     channel_counters = {}
@@ -407,15 +407,16 @@ with open(os.path.join(save_path, "lives.m3u"), 'w', encoding='utf-8') as file:
                 if channel_counters[channel_name] >= result_counter:
                     continue
                 else:
-                    file.write(f"#EXTINF:-1 group-title=\"其他频道\",{channel_name}\n")
+                    file.write(f"#EXTINF:-1 group-title=\"👑｜其他频道\",{channel_name}\n")
                     file.write(f"{channel_url}\n")
                     channel_counters[channel_name] += 1
             else:
-                file.write(f"#EXTINF:-1 group-title=\"其他频道\",{channel_name}\n")
+                file.write(f"#EXTINF:-1 group-title=\"👑｜其他频道\",{channel_name}\n")
                 file.write(f"{channel_url}\n")
                 channel_counters[channel_name] = 1
 
     file.write(f"#EXTINF:-1 group-title=\"📺｜定期维护\",{formatted_date}更新\n")
+    file.write(f"{first_channel_url}\n")
 
 t2 = time.time()
 print(f'共计耗时:{round(t2 - t1, 2)}秒')
