@@ -13,18 +13,20 @@ function removeTrailingSlash(url) {
     return url.replace(/\/+$/, ''); // 去掉一个或多个斜杠
 }
 
-// 获取环境变量，使用用户定义的值或默认值
-const SOURCE_URL = removeTrailingSlash(
-    (typeof env.SOURCE_URL !== 'undefined' ? env.SOURCE_URL : 'http://hls.cntv.cdn20.com/')
-);
-
-const PROXY_URL = removeTrailingSlash(
-    (typeof env.PROXY_URL !== 'undefined' ? env.PROXY_URL : 'https://cntv.playdreamer.cn/')
-);
+let SOURCE_URL
+let PROXY_URL
 
 export default {
     async fetch(request, env, ctx) {
         const url = new URL(request.url);
+        // 获取环境变量，使用用户定义的值或默认值
+        SOURCE_URL = removeTrailingSlash(
+            (typeof env.SOURCE_URL !== 'undefined' ? env.SOURCE_URL : 'http://hls.cntv.cdn20.com/')
+        );
+
+        PROXY_URL = removeTrailingSlash(
+            (typeof env.PROXY_URL !== 'undefined' ? env.PROXY_URL : 'https://cntv.playdreamer.cn/')
+        );
 
         // 处理 M3U8 请求
         if (url.pathname.startsWith('/proxy/')) {
@@ -42,7 +44,7 @@ export default {
 
 async function handleM3U8Request(url) {
     // 获取 M3U8 文件的 URL
-    const originalUrl = url.pathname.replace('/proxy/', SOURCE_URL);
+    const originalUrl = url.pathname.replace('/proxy', SOURCE_URL);
 
     // 请求 M3U8 文件
     const m3u8Response = await fetch(originalUrl);
