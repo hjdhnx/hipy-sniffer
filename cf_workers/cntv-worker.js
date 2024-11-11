@@ -6,8 +6,19 @@
  * - Run "npm run deploy" to publish your worker
  *
  * Learn more at https://developers.cloudflare.com/workers/
+ * 4K: 1080
+ * https://cntv.playdreamer.cn/proxy/asp/hls/4000/0303000a/3/default/a35a7adab0ab4c4786188ec9fc455151/4000.m3u8
+ * 非电视 720
  * https://cntv.playdreamer.cn/proxy/asp/hls/2000/0303000a/3/default/9eaf892ce08a49509fcf3595fb3eabd7/2000.m3u8
+ * 电视 240
  * https://cntv.playdreamer.cn/proxy/asp/hls/2000/0303000a/3/default/37241820097b47bfb71c39651d8fd988/2000.m3u8
+ * 电视 走向大西南 720
+ * https://cntv.playdreamer.cn/proxy/asp/hls/2000/0303000a/3/default/ecdfeae7be694ae381f805aad83fabd7/2000.m3u8
+
+ * https://dhlszb.cntv.myhwcdn.cn/
+ * https://hls.cntv.myhwcdn.cn/
+ * https://hls.cntv.lxdns.com/
+
  */
 
 // 定义去掉右侧斜杠的函数
@@ -18,13 +29,19 @@ function removeTrailingSlash(url) {
 let SOURCE_URLS;
 let PROXY_URL;
 let REDIRECT_ON_FAILURE;
+let CDN_LISTS = [
+    'http://hls.cntv.cdn20.com/',
+    // 'https://dhlszb.cntv.myhwcdn.cn/',
+    'https://hls.cntv.myhwcdn.cn/',
+    'https://hls.cntv.lxdns.com/',
+]
 
 export default {
     async fetch(request, env, ctx) {
         const url = new URL(request.url);
 
         // 获取环境变量，使用用户定义的值或默认值
-        SOURCE_URLS = (env.SOURCE_URLS ? JSON.parse(env.SOURCE_URLS) : ['http://hls.cntv.cdn20.com/', 'https://dhlszb.cntv.myhwcdn.cn/'])
+        SOURCE_URLS = (env.SOURCE_URLS ? JSON.parse(env.SOURCE_URLS) : CDN_LISTS)
             .map(removeTrailingSlash);
 
         PROXY_URL = removeTrailingSlash(env.PROXY_URL || 'https://cntv.playdreamer.cn/');
@@ -42,7 +59,7 @@ export default {
             return handleTSRequest(url);
         }
 
-        return new Response('Not Found', { status: 404 });
+        return new Response('Not Found', {status: 404});
     },
 };
 
@@ -54,10 +71,10 @@ async function tryFetchFromSourceList(path) {
         triedUrls.push(fullUrl);  // 记录每次尝试的 URL
 
         const response = await fetch(fullUrl);
-        if (response.ok) return { response, triedUrls };
+        if (response.ok) return {response, triedUrls};
     }
 
-    return { response: null, triedUrls };
+    return {response: null, triedUrls};
 }
 
 async function handleM3U8Request(url) {
@@ -65,7 +82,7 @@ async function handleM3U8Request(url) {
     const relativePath = url.pathname.replace('/proxy/', '');
 
     // 请求 M3U8 文件
-    const { response: m3u8Response, triedUrls } = await tryFetchFromSourceList(relativePath);
+    const {response: m3u8Response, triedUrls} = await tryFetchFromSourceList(relativePath);
 
     // 检查所有 URL 是否都失败
     if (!m3u8Response) {
@@ -74,7 +91,7 @@ async function handleM3U8Request(url) {
             return Response.redirect(triedUrls[triedUrls.length - 1], 302);
         }
         // 否则返回错误信息
-        return new Response(`Failed to fetch M3U8 file. Tried URLs:\n${triedUrls.join('\n')}`, { status: 502 });
+        return new Response(`Failed to fetch M3U8 file. Tried URLs:\n${triedUrls.join('\n')}`, {status: 502});
     }
 
     // 读取 M3U8 内容
@@ -99,7 +116,7 @@ async function handleTSRequest(url) {
     const tsFileName = url.pathname.replace('/ts/', '');
 
     // 请求 TS 文件
-    const { response: tsResponse, triedUrls } = await tryFetchFromSourceList(tsFileName);
+    const {response: tsResponse, triedUrls} = await tryFetchFromSourceList(tsFileName);
 
     // 检查所有 URL 是否都失败
     if (!tsResponse) {
@@ -108,7 +125,7 @@ async function handleTSRequest(url) {
             return Response.redirect(triedUrls[triedUrls.length - 1], 302);
         }
         // 否则返回错误信息
-        return new Response(`Failed to fetch TS file. Tried URLs:\n${triedUrls.join('\n')}`, { status: 502 });
+        return new Response(`Failed to fetch TS file. Tried URLs:\n${triedUrls.join('\n')}`, {status: 502});
     }
 
     // 返回 TS 文件的响应
