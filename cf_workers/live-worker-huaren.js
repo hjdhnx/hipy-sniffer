@@ -15,6 +15,7 @@ export default {
 // https://live.playdreamer.cn/proxy/stream/CCTV6.m3u8
 // let base_url = 'https://live.playdreamer.cn/proxy/';
 let proxy_url = 'https://mediaproxy.leuse.top/?url=';
+// proxy_url = '';
 let base_url = 'https://live.huaren.live/';
 let headers = {
     "Referer": base_url,
@@ -104,7 +105,8 @@ async function handleProxyRequest(url, env) {
             const newlinesArray = [];
             for (let line of linesArray) {
                 if (line.startsWith('http')) {
-                    newlinesArray.push(proxy_url + line)
+                    // newlinesArray.push(proxy_url + line)
+                    newlinesArray.push(line)
                 } else {
                     newlinesArray.push(line)
                 }
