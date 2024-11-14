@@ -14,6 +14,7 @@ export default {
 // https://live.playdreamer.cn/proxy/https://live.huaren.live/stream/CCTV6.m3u8
 // https://live.playdreamer.cn/proxy/stream/CCTV6.m3u8
 // let base_url = 'https://live.playdreamer.cn/proxy/';
+let proxy_url = 'https://mediaproxy.leuse.top/?url=';
 let base_url = 'https://live.huaren.live/';
 let headers = {
     "Referer": base_url,
@@ -23,7 +24,7 @@ let headers = {
 async function handleProxyRequest(url, env) {
     const relativePath = url.pathname.replace('/proxy/', '');
     base_url = removeTrailingSlash(env.BASE_URL || base_url);
-    const targetUrl = `${base_url}/${relativePath}`;
+    const targetUrl = `${proxy_url}${base_url}/${relativePath}`;
     // const targetUrl = relativePath;
 
     // 检查文件扩展名
@@ -63,35 +64,56 @@ async function handleProxyRequest(url, env) {
         //         'Cache-Control': 'no-cache'
         //     }
         // });
+        const responseHeaders = {
+            'Content-Disposition': `attachment; filename="${filename}"`,
+            'Content-Type': contentType,
+            'Cache-Control': 'no-cache',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
+            'Access-Control-Allow-Headers': '*',
+        };
 
-        // 创建流式响应
-        return new Response(
-            new ReadableStream({
-                async start(controller) {
-                    const reader = response.body.getReader();
-                    try {
-                        while (true) {
-                            const {done, value} = await reader.read();
-                            if (done) break;
-                            controller.enqueue(value); // 将数据块推送到响应流
+        if (extension === 'ts') {
+            // 创建流式响应
+            return new Response(
+                new ReadableStream({
+                    async start(controller) {
+                        const reader = response.body.getReader();
+                        try {
+                            while (true) {
+                                const {done, value} = await reader.read();
+                                if (done) break;
+                                controller.enqueue(value); // 将数据块推送到响应流
+                            }
+                            controller.close();
+                        } catch (error) {
+                            console.error('Stream error:', error);
+                            controller.error(error);
+                        } finally {
+                            reader.releaseLock();
                         }
-                        controller.close();
-                    } catch (error) {
-                        console.error('Stream error:', error);
-                        controller.error(error);
-                    } finally {
-                        reader.releaseLock();
                     }
+                }),
+                {
+                    headers: responseHeaders
                 }
-            }),
-            {
-                headers: {
-                    'Content-Disposition': `attachment; filename="${filename}"`,
-                    'Content-Type': contentType,
-                    'Cache-Control': 'no-cache'
+            );
+        } else {
+            const lines = await response.text();
+            const linesArray = lines.split("\n");
+            const newlinesArray = [];
+            for (let line of linesArray) {
+                if (line.startsWith('http')) {
+                    newlinesArray.push(proxy_url + line)
+                } else {
+                    newlinesArray.push(line)
                 }
             }
-        );
+            const content = newlinesArray.join('\n').trim()
+            return new Response(content, {
+                headers: responseHeaders,
+            });
+        }
     } catch (error) {
         return new Response(JSON.stringify({error: `Failed to process file:[${targetUrl}] ${error.message}`}), {
             status: 500,

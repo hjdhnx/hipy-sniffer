@@ -8,10 +8,17 @@ localProxyUrl添加方式：
 // 开始处理
 export default {
     async fetch(request, env) {
-        // env.localProxyUrl = env.localProxyUrl || "https://live.playdreamer.cn/"
+        env.localProxyUrl = env.localProxyUrl || proxyUrls[1]
         return await handleRequest(request, env);
     },
 };
+
+const proxyUrls = [
+    'http://mediaproxy.fongmi.leuse.top/?url=',
+    'https://mediaproxy.leuse.top/?url=',
+    'http://mediaproxy.vpsdn.leuse.top/?url=',
+    'https://mediaproxy.luci.rbtv.top/?url=',
+];
 
 // 搜索
 async function searchContent(keywords, page, env) {
@@ -263,7 +270,7 @@ async function handleRequest(request, env) {
                 const content = await live(proxyUrl, env)
                 return new Response(content, {
                     headers: {
-                        'Content-Type': 'text/plain'
+                        'Content-Type': 'text/plain;charset=UTF-8'
                     }
                 });
             }
